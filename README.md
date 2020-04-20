@@ -1,6 +1,8 @@
 # Eva tool
 ## An Evaluation Tool for Comparing Descriptors in Content-Based Image Retrieval Tasks
 
+**Warning:** This tool was created during my Masters studies, from 2007 to 2009. Therefore, it may be technologically obsolete. I just moved the code from my personal webpage to this GitHub repository. Feel free to use and update it. 
+
 Eva is a tool for evaluating image descriptors for content-based image retrieval. Eva integrates the most common stages of an image retrieval process and provides functionalities to facilitate the comparison of image descriptors in the context of content-based image retrieval. Eva supports the management of image descriptors and image collections and creates a standardized environment to run comparative experiments using them.
 
 The details about Eva are given in the paper published in the ACM International Conference on Multimedia Information Retrieval (MIR), 2010.
