@@ -1,0 +1,117 @@
+/*
+*    This file is part of Eva tool.
+*
+*    Eva is free software: you can redistribute it and/or modify
+*    it under the terms of the GNU General Public License as published by
+*    the Free Software Foundation, either version 3 of the License, or
+*    (at your option) any later version.
+*
+*    Eva is distributed in the hope that it will be useful,
+*    but WITHOUT ANY WARRANTY; without even the implied warranty of
+*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*    GNU General Public License for more details.
+*
+*    You should have received a copy of the GNU General Public License
+*    along with Eva. If not, see <http://www.gnu.org/licenses/>.
+*
+*    For commercial use of Eva, please contact me.
+*
+*    COPYRIGHT 2010-2013  - Otavio A. B. Penatti - otavio_at_penatti_dot_com
+*/
+
+<!-- 
+/*
+	| liquidcorners.css; feel free to adapt the style!
+	| ================================================
+	| use: 4 corners with borderline outside a contentbox with class="inside"; 
+	|      image  = upper half: top left corner, long borderline, top right corner
+	|               under half: bottom left corner, long borderline, bottom right corner
+	|      CHANGE = you have to change this for fitting to your image
+	|      YCC    = You Can Change (or omit), if wanted
+	|      DNC    = Do Not Change
+	| credits: original by francky kleyneman, see article/tutorial in Francky's Developers Corner:
+	|          http://home.tiscali.nl/developerscorner/liquidcorners/liquidcorners.htm
+	| adapted
+	| by.....: ... (your name and site?!)
+	|
+	| + please let this text & links intact for a next user +
+*/
+.top-left, .top-right, .bottom-left, .bottom-right { 
+	background-image: url('images/corners1280x18.gif'); /* CHANGE: path and name of your image */
+	height: 9px;       /* CHANGE: replace by the height of one of your corners (= 1/2 height of the image) */
+	font-size: 2px;    /* DNC: correction IE for height of the <div>'s */
+	}
+.top-left, .bottom-left { 
+	margin-right: 9px; /* CHANGE: replace by the width of one of your corners */
+	}
+.top-right, .bottom-right { 
+	margin-left: 9px;  /* CHANGE: replace by the width of one of your corners */
+	margin-top: -9px;  /* CHANGE: replace by the height of one of your corners */
+	}
+.top-right {
+	background-position: 100% 0;    /* DNC: position right corner at right side, no vertical changes */
+	}
+.bottom-left  { 
+	background-position: 0 -9px;    /* CHANGE: replace second number by negative height of one of your corners */
+	}
+.bottom-right { 
+	background-position: 100% -9px; /* CHANGE: replace second number by negative height of one of your corners */
+	}
+.inside {
+	border-left: 1px solid #C00000; /* YCC: color & properties of the left-borderline */
+	border-right: 1px solid #C00000;/* YCC: color & properties of the right-borderline */
+	background: #EFEFEF;            /* YCC: background-color of the inside */
+	color: #000000;                 /* YCC: default text-color of the inside */
+	padding-left: 10px;             /* YCC: all texts at some distance of the left border */
+	padding-right:10px;             /* YCC: all texts at some distance of the right border */
+	}
+.notopgap    { margin-top: 0; }    /* DNC: to avoid splitting of the box */
+.nobottomgap { margin-bottom: -1px; padding-bottom: 1px; } /* DNC: to avoid splitting of the box */
+.gap-saver { height: 1px; margin: 0 0 -1px 0; padding: 0; font-size: 1px; } /* to correct IE */
+
+
+
+
+/*
+implementation in the page:
+	...
+	<head>
+	<link rel="stylesheet" type="text/css" href="liquidcorners.css">
+	...
+	</head>
+	
+	<body>
+	...
+	<div class="top-left"></div><div class="top-right"></div>
+		<div class="inside">
+		<p class="notopgap">Your text & other things inside</p>
+		...
+		<p class="nobottomgap">...</p>
+		</div>
+	<div class="bottom-left"></div><div class="bottom-right"></div>
+	...
+	</body>
+*/
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
