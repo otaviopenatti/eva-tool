@@ -1,5 +1,5 @@
 ## Installation instructions for Eva
-**(reminder: this instructions were created several years ago)**
+**(reminder: these instructions were created several years ago; some packages may not exist anymore)**
 
 Packages required (Linux environment):
 - Apache
