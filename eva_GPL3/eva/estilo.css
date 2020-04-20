@@ -1,0 +1,105 @@
+/*
+*    This file is part of Eva tool.
+*
+*    Eva is free software: you can redistribute it and/or modify
+*    it under the terms of the GNU General Public License as published by
+*    the Free Software Foundation, either version 3 of the License, or
+*    (at your option) any later version.
+*
+*    Eva is distributed in the hope that it will be useful,
+*    but WITHOUT ANY WARRANTY; without even the implied warranty of
+*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*    GNU General Public License for more details.
+*
+*    You should have received a copy of the GNU General Public License
+*    along with Eva. If not, see <http://www.gnu.org/licenses/>.
+*
+*    For commercial use of Eva, please contact me.
+*
+*    COPYRIGHT 2010-2013  - Otavio A. B. Penatti - otavio_at_penatti_dot_com
+*/
+
+BODY {
+    line-height: 20pt;
+    font-family: Tahoma, Verdana, Arial, Sans;
+    background-color: #ddd;
+    margin-top: 10pt;
+    margin-left: 5pt;
+    margin-right: 0pt;
+    background-color: #2b70d8;
+    background-color: #005096;
+}
+A {
+    color: #005096;
+}
+TABLE {
+    font-size: 10pt;
+    /*background-color: #ccc;*/
+    background-color: #316AC5;
+}
+TD {
+    text-align: center;
+    /*background-color: #eee;*/
+    background-color: #C6D6EF;
+}
+TH {
+    color: #fff;
+    background-color: #538ce7;
+}
+TABLE.code {
+    font-family: Courier;
+    background-color: #ccc;
+}
+TABLE.code TD {
+    background-color: #eee;
+    text-align: left;
+    padding: 10;
+    line-height: 15pt;
+}
+TABLE.code TD.erro {
+    color: #c00;
+}
+TABLE.code TD.sucesso {
+    color: #2a0;
+}
+TABLE.cadastro {
+    background-color: #316AC5;
+}
+TABLE.cadastro TD {
+    text-align: left;
+    background-color: #C6D6EF;
+    padding: 5px;
+}
+.explica {
+    font-size: 8pt;
+    color: #1148a3;
+}
+
+
+
+
+
+/************************* BORDAS ARREDONDADAS! *************************/
+/******* Configura&ccedil;&otilde;es do Bloco2 *******/
+#bloco2 {
+    padding: 0px 0px 0px 5px;
+    width: 98%; 
+    float: left;
+  }
+#bloco2 .top-left, #bloco2 .top-right, #bloco2 .bottom-left, #bloco2 .bottom-right { 
+    background-image: url('images/corners1280x18_white.gif');
+    height: 9px;
+    font-size: 2px;
+    }
+#bloco2 .inside {
+    background-color: #fff;
+    color: #000;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #fff;
+    padding-left: 20px;             
+    padding-right:10px;             
+    text-align: left;
+    font-family: Tahoma,Verdana,Arial;
+}
+/******* Configura&ccedil;&otilde;es do Bloco2 *******/
+/************************* BORDAS ARREDONDADAS! *************************/

@@ -1,0 +1,53 @@
+/*
+*    This file is part of Eva tool.
+*
+*    Eva is free software: you can redistribute it and/or modify
+*    it under the terms of the GNU General Public License as published by
+*    the Free Software Foundation, either version 3 of the License, or
+*    (at your option) any later version.
+*
+*    Eva is distributed in the hope that it will be useful,
+*    but WITHOUT ANY WARRANTY; without even the implied warranty of
+*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*    GNU General Public License for more details.
+*
+*    You should have received a copy of the GNU General Public License
+*    along with Eva. If not, see <http://www.gnu.org/licenses/>.
+*
+*    For commercial use of Eva, please contact me.
+*
+*    COPYRIGHT 2010-2013  - Otavio A. B. Penatti - otavio_at_penatti_dot_com
+*/
+
+BODY {
+	font-family: Tahoma,Arial,Helvetica,Courier;
+    font-size: 10pt;
+/*    background-color: #eee;*/
+}
+
+TABLE {
+    font-size: 8pt;
+    font-family: Tahoma,Arial,Helvetica,Courier;
+    /*	background-color: #ccc;*/
+    background-color: #316AC5;
+    background-color: #fff;
+}
+TD {
+    text-align: center;
+    /*	background-color: #eee;*/
+    background-color: #C6D6EF;
+/*    border-top: 1px solid #fff;
+    border-left: 1px solid #fff;
+    border-right: 1px solid #316AC5;
+    border-bottom: 1px solid #316AC5;*/
+}
+
+.consulta {
+    width: 80%;
+}
+
+.resultados_titulo {
+    /*	background-color: #ddd;*/
+    background-color: #316AC5;
+    color: #fff;
+}
