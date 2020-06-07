@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -31,19 +31,6 @@ session_start();
     $_SESSION['bases'] = $bases;
     $_SESSION['medidas'] = $medidas;
 
-/*
-echo "SEPARANDO IDS DOS DESCRITORES<pre>";
-print_r (split('[,]', $_POST[ids_desc]));
-echo "</pre><br/><br/><br/>";
-
-
-echo "SEPARANDO IDS DAS BASES<pre>";
-print_r (split('[,]', $_POST[ids_bases]));
-echo "</pre><br/><br/><br/>";
-
-
-echo "Chamar scripts python com os parametros acima";
-*/
 ?>
 <html>
     <head>
@@ -72,14 +59,7 @@ echo "Chamar scripts python com os parametros acima";
                 alert("Invalid e-mail!");
                 return false;
             }
-            /*verificacao da lista de consultas*/
-            //if (document.form_exp.consultas_lista.value == '') {
-            //    window.alert('Escolha o arquivo com a lista de imagens de consultas');
-            //    return false;
-            //} else {
-                //window.alert(document.form_exp.consultas_lista.value);
-                document.form_exp.caminho_consultas_lista.value = document.form_exp.consultas_lista.value;
-            //}
+            document.form_exp.caminho_consultas_lista.value = document.form_exp.consultas_lista.value;
             return true;
         }
     </script>
@@ -129,13 +109,10 @@ echo "Chamar scripts python com os parametros acima";
                 <td>
                     <ul>
 <?
-                        //por padrao, faz de conta que existe uma base classificada na lista
-                        //isto eh feito pois a opcao de considerar a divisao da base soh pode
-                        //ser ativada caso todas as bases escolhidas sejam classificadas!
-                        //entao, qdo aparecer uma base nao classificada, ja desativa
+                        //by default, considers at least one categorized dataset in the list (i.e., labeled with categories)
                         $existe_base_classificada = 1;
 
-                        //recupera os nomes das bases
+                        //retrieve database names
                         $query = "SELECT id, name, classified FROM imagedatabase WHERE id IN (".$_POST[ids_bases].")";
                         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 
@@ -143,9 +120,9 @@ echo "Chamar scripts python com os parametros acima";
                             $line = pg_fetch_array($result, null, PGSQL_ASSOC);
                             echo "<li>$base - ".$line['name']."</li>";
 
-                            //Verificar se existe alguma base nao classificada
+                            //Check if there is any uncategorized database
                             if ($line['classified']==f) {
-                                $existe_base_classificada = 0; //se existir ja desativa a opcao de base classificada
+                                $existe_base_classificada = 0; //disable option of categorized database
                             }
                         }
                         // Free resultset
@@ -157,7 +134,7 @@ echo "Chamar scripts python com os parametros acima";
                 <td>
                     <ul>
 <?
-                        //recupera os nomes das medidas de avaliacao
+                        //retrieve names of evaluation measures
                         $query = "SELECT id, name FROM evaluationmeasure WHERE id IN (".$_POST[ids_medidas].")";
                         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 

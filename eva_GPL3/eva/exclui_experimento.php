@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -33,36 +33,35 @@
 
         echo "id_exp=".$_POST['id_exp_del']."<br/>";
 
-        //Apaga avaliacao com usuarios!
+        //Delete user evaluation
         $query = "DELETE FROM experimentuserevaluation WHERE idexperiment=".$_POST['id_exp_del'];
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 
-        // Apaga do relacionamento com as medidas de avaliacao
+        //Delete relationship with the evaluation measures
         $query = "DELETE FROM experimentevaluationmeasure WHERE idexperiment=".$_POST['id_exp_del'];
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 
-        // Apaga do relacionamento com as bases de imagens
+        //Delete relationship with image databases
         $query = "DELETE FROM experimentimagedatabase WHERE idexperiment=".$_POST['id_exp_del'];
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 
-        // Apaga do relacionamento com os descritores
+        //Delete relationship with descriptors
         $query = "DELETE FROM experimentdescriptor WHERE idexperiment=".$_POST['id_exp_del'];
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 
-        // Apaga do relacionamento com os tempos
+        //Delete relationship with times
         $query = "DELETE FROM experimenttime WHERE idexperiment=".$_POST['id_exp_del'];
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 
-        // Apaga do relacionamento com as distancias
+        //Delete relationship with distances
         $query = "DELETE FROM distance WHERE idexperiment=".$_POST['id_exp_del'];
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 
-        // Apaga da tabela experimento
+        //Delete experiment table
         $query = "DELETE FROM experiment WHERE id=".$_POST['id_exp_del'];
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 
-        //FALTA APAGAR ARQUIVOS DO EXPERIMENTO
-        //ATUALMENTE ESSA DELECAO EH SOH PRA LIMPAR UM POUCO A LISTA EXIBIDA NA PAGINA DE EXPERIMENTOS REALIZADOS
+        //Still needs to delete experiment files!
         //unlink("descriptors/$_GET[id].so");
 
         // Closing connection

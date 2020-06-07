@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -98,7 +98,7 @@ session_start();
                        <li>Use the path that passes through the <i>img_databases</i> directory, which is inside the Eva tool in the Web server. If you do not want to create a copy of your database, use symbolic links;</li>
                             <a class="explica" id="explica_sigla_link" href="javascript:swap('explica_sigla')"><b>?</b></a>
                             <i class="explica" id="explica_sigla" style="display:none">
-                                Eva works even if the path does not passes through the img_databases directory. However, in this case the images cannot be showed by the web browser. Therefore, it is better to use the path the passes through the img_databases directory.<br/><br/>
+                                Eva works even if the path does not pass through the img_databases directory. However, in this case the images cannot be shown by the web browser. Therefore, it is better to use the path that passes through the img_databases directory.<br/><br/>
                                 Example: if your image collection is at /home/user/bases/base1/, create a symbolic link inside the img_databases directory that points to your collection. Then, insert here the path /var/www/eva/img_databases/base1/. (supposing that Eva is at /var/www/)
                             </i>
                        <li>Include the final slash ('/').</li>

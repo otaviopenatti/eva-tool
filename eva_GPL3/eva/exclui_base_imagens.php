@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -51,13 +51,13 @@
     <h1>Delete Image Database</h1>
 
 <?
-        // SQL para verificar se a base de imagens esta em uso em algum experimento
+        // SQL to check if the database is in use by any experiment
         $query =  "SELECT COUNT(idimagedatabase) FROM experimentimagedatabase WHERE idimagedatabase='$_GET[id]'";
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
         $line = pg_fetch_array($result, null, PGSQL_ASSOC);
         pg_free_result($result);
         if ($line['count'] != 0) {
-            //base de imagens esta em uso, portanto nao pode ser apagada do bd
+            //database is used by some experiment, so it cannot be deleted
 ?>
             PROBLEMS DELETING THE DATABASE IMAGE <b><?=$_GET['id']?></b>:
             <blockquote>
@@ -65,7 +65,7 @@
             </blockquote>
 <?
         } else {
-            //SQL para apagar a base de imagens do bd
+            //SQL to delete an image database
             $query = "DELETE FROM imagedatabase WHERE id='$_GET[id]'";
             $result = pg_query($query) or die('Query failed: ' . pg_last_error());
             pg_free_result($result);

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -23,7 +23,6 @@
 session_start();
 
 if ($_SESSION['id_experimento']) {
-    //limpa a sessao para evitar erros
     session_destroy();
 }
 
@@ -70,7 +69,7 @@ if ($_SESSION['id_experimento']) {
     // Connecting, selecting database
     $dbconn = connect();
 
-    //pega o max e o min id dos experimentos do bd
+    //get max and min of experiment ids
     $query_min = "SELECT MIN(id) FROM experiment";
     $result_min = pg_query($query_min) or die('Query failed: ' . pg_last_error());
     $min = pg_fetch_array($result_min, null, PGSQL_ASSOC);
@@ -81,8 +80,7 @@ if ($_SESSION['id_experimento']) {
     $max = pg_fetch_array($result_max, null, PGSQL_ASSOC);
     pg_free_result($result_max);
 
-    //echo "max=".$max['max']." - min=".$min['min']."<br/>";
-    //verifica se ant e prox sao validos
+    //check if ant and prox are valid
     if ($_GET['ant']<$min['min'] OR $_GET['ant']>$max['max']) {
         unset($_GET['ant']);
     }
@@ -90,9 +88,9 @@ if ($_SESSION['id_experimento']) {
          unset($_GET['prox']);
      }
 
-    // Seleciona todos os experimentos realizados - pega de 10 em 10
+    //Select all experiments executed (at each 10)
     if ($_GET['ant']) {
-        //para selecionar os 10 anteriores
+        //to select the 10 previous ones
         $query = "SELECT * FROM (SELECT * FROM experiment WHERE id>".$_GET['ant']." ORDER BY id LIMIT 10) as q2 ORDER BY id DESC";
     } else {
         if ($_GET['prox']) {
@@ -120,12 +118,12 @@ if ($_SESSION['id_experimento']) {
                 $exp_count=0;
                 $primeiro_exp_exibido = -1;
                 while ($line_exp = pg_fetch_array($result_exp, null, PGSQL_ASSOC)) {
-                    $descritores = ""; //esvazia variavel que guarda os descritores de cada experimento
-                    $fim_dist = 0;  //inicializa variavel que indica se o experimento foi terminado ou nao
+                    $descritores = ""; //set to empty the variable that stores the descriptors of each experiment
+                    $fim_dist = 0;  //initialized variable that indicates if the experiment is concluded or not
                     $fim_ext = 0;
 
-                    //guarda o id do primeiro exp exibido na tela
-                    if ($primeiro_exp_exibido == -1) { //guarda apenas qdo o primeiro_exp_exibido nao foi inicializado ainda
+                    //saves the id of the first experiment shown in the screen
+                    if ($primeiro_exp_exibido == -1) {
                         $primeiro_exp_exibido = $line_exp['id'];
                     }
 ?>
@@ -135,7 +133,7 @@ if ($_SESSION['id_experimento']) {
                     <td><?=$line_exp['email']?></td>
                     <td>
                         <?
-                        // Seleciona todos os descritores utilizados
+                        // Select all descriptors used
                         $query = 'SELECT iddescriptor FROM experimentdescriptor WHERE idexperiment='.$line_exp['id'];
                         $result_desc = pg_query($query) or die('Query failed: ' . pg_last_error());
                         $i=0;
@@ -148,7 +146,7 @@ if ($_SESSION['id_experimento']) {
                     </td>
                     <td>
                         <?
-                        // Seleciona todas as bases utilizadas
+                        // Select all image databases used
                         $query = 'SELECT img.name FROM experimentimagedatabase ei, imagedatabase img WHERE idexperiment='.$line_exp['id'];
                         $query.= ' AND ei.idimagedatabase=img.id';
                         $result_img = pg_query($query) or die('Query failed: ' . pg_last_error());
@@ -161,7 +159,7 @@ if ($_SESSION['id_experimento']) {
                     </td>
                     <td>
                         <?
-                        // Seleciona todas as medidas utilizadas
+                        // Select all evaluation measures used
                         $query = 'SELECT ev.name FROM experimentevaluationmeasure em, evaluationmeasure ev WHERE idexperiment='.$line_exp['id'];
                         $query.= ' AND em.idevaluationmeasure=ev.id';
                         $result_m = pg_query($query) or die('Query failed: ' . pg_last_error());
@@ -175,17 +173,16 @@ if ($_SESSION['id_experimento']) {
                     <td>
                     <?
 
-                        //Verificando progresso dos experimentos
+                        //Check experiment progress
                         $fim_ext = 0;
                         $fim_dist = 0;
 
-
-                        //AJUSTA PARA EVITAR MOSTRAR 100% QDO NAO TERMINARAM TODOS OS DESCRITORES (QDO APENAS 1 TERMINOU)
+                        //adjustment to avoid showing progress of 100% when only some descriptors finished
                         $query_progress = "SELECT COUNT(iddescriptor) from experimenttime where idexperiment=".$line_exp['id']." GROUP BY iddescriptor ORDER BY COUNT(iddescriptor) LIMIT 1";
                         $result_progress = pg_query($query_progress) or die('Query failed: ' . pg_last_error());
                         $valor = pg_fetch_array($result_progress, null, PGSQL_ASSOC);
-                        //se a qtd retornada na consulta for igual a 2, eh pq todos os descritores ja estao com as duas medidas na tabela de tempos
-                        //portanto o experimento ja terminou
+                        //if the number returned in the query equals 2, all descriptors already have the two measures in the time table
+                        //which means that the experiment has already finished
                         if ($valor['count'] == 2) {
                             echo "<font color=#0c8f0f>E=100%</font><br/>";
                             $fim_ext = 1;
@@ -193,28 +190,11 @@ if ($_SESSION['id_experimento']) {
                             $fim_dist = 1;
                         }
                         pg_free_result($result_progress);
-/*
-                        //se ja existir registros na tabela de tempos, o experimento pode ja ter terminado
-                        $query = 'SELECT idevaluationmeasure FROM experimenttime WHERE idexperiment='.$line_exp['id'];
-                        $result_progress = pg_query($query) or die('Query failed: ' . pg_last_error());
-                        $i=0;
-                        while ($valor = pg_fetch_array($result_progress, null, PGSQL_ASSOC)) {
-                            if ($valor['idevaluationmeasure'] == 1 && $fim_ext != 1) {
-                                echo "<font color=#0c8f0f>E=100%</font><br/>";
-                                $fim_ext = 1;
-                            }
-                            if ($valor['idevaluationmeasure'] == 2 && $fim_dist != 1) {
-                                echo "<font color=#0c8f0f>D=100%</font><br/>";
-                                $fim_dist = 1;
-                            }
-                        }
-*/
-                        //pg_free_result($result_progress);
 
-                        /****VERIFICACAO DE PROGRESSO **********/
+                        /*** PROGRESS CHECKING ***/
                         $arq_details = "results/".$line_exp['id']."/exp_details_".$line_exp['id'].".log";
 
-                        //se nao tem registro de tempo no bd, busca progresso em arquivo
+                        //if there is not time registered in the database, search for progress in the log file
                         if ($fim_ext != 1) {
                             if (file_exists($arq_details)) {
                                 exec("cat ".$arq_details." | grep \"ext_progress\" | tail -n 1", $ext_prog);
@@ -227,9 +207,9 @@ if ($_SESSION['id_experimento']) {
 
                         }
 
-                        //se nao tem registro de tempo no bd, busca progresso em arquivo
+                        //if there is not time registered in the database, search for progress in the log file
                         if ($fim_dist != 1) {
-                            if (file_exists($arq_details)) {   //testando progresso no arquivo de detalhes
+                            if (file_exists($arq_details)) { 
                                 exec("cat ".$arq_details." | grep \"dist_progress\" | tail -n 1", $dist_prog);
                                 $dist_prog = split(":", $dist_prog[0]);
                                 echo "<font color=#cc0000>D=</font>".round(($dist_prog[1]*100),2)."%<br/>";
@@ -246,7 +226,6 @@ if ($_SESSION['id_experimento']) {
                         $d_atual = "";
                         $ext_prog = "";
                         $dist_prog = "";
-/***************/
                     ?>
                     </td>
                     <td>
@@ -257,10 +236,10 @@ if ($_SESSION['id_experimento']) {
                         $action = "codes/view_images_bd.php";
                         echo "    <form method=\"post\" name=\"".$line_exp['id']."\" action=\"$action\">\n";
 
-                        //coloca o id do experimento num form hidden
+                        //experiment id in a hidden form
                         echo "\t\t\t  <input type=\"hidden\" name=\"exp\" value=\"".$line_exp['id']."\"/>\n";
 
-                        //coloca o id de cada descritor usado no experimento num form hidden
+                        //descriptors id in a hidden form
                         $i=0;
                         foreach ($descritores as $desc_id) {
                             echo "\t\t\t  <input type=\"hidden\" name=\"desc".$i."\" value=\"".$desc_id."\"/>\n";
@@ -273,11 +252,11 @@ if ($_SESSION['id_experimento']) {
                         echo "</form>\n";
 
                         ////////////////////////////////
-                        echo "    <form method=\"post\" name=\"seila\" action=\"codes/view_images_feedback.php\">\n";
+                        echo "    <form method=\"post\" name=\"form_name\" action=\"codes/view_images_feedback.php\">\n";
 
-                        //coloca o id do experimento num form hidden
+                        //experiment id in a hidden form
                         echo "\t\t\t  <input type=\"hidden\" name=\"exp\" value=\"".$line_exp['id']."\"/>\n";
-                        //coloca o id de cada descritor usado no experimento num form hidden
+                        //descriptors id in a hidden form
                         $i=0;
                         foreach ($descritores as $desc_id) {
                             echo "\t\t\t  <input type=\"hidden\" name=\"desc".$i."\" value=\"".$desc_id."\"/>\n";
@@ -289,17 +268,15 @@ if ($_SESSION['id_experimento']) {
                         }
                         $arq_queryImagesClasses = "results/".$line_exp['id']."/queryImagesClasses.txt";
                         if ($fim_dist==1 && file_exists($arq_queryImagesClasses)) {
-                            //distancia acabou. mas geracao do arquivo de distancias pode estar em execucao ainda
-                            //verifica progresso para saber se calculo do precision x recall ja foi calculado
+                            //distance is concluded, but generation of distance file may be ongoing
+                            //check progress if the precision x recall measure was already computed
                             exec("cat ".$arq_details." | grep \"pr_progress\" | tail -n 1", $pr_prog);
                             $pr_prog = split(":", $pr_prog[0]);
                             echo "<font color=#cc0000>PR=</font>".round(($pr_prog[1]*100),2)."%";
                         }
                         $pr_prog = "";
-                        //////////////
-                        //////////////////////////////////
 
-                        //Pega o ID do ultimo exp exibido
+                        //get the id of the last experiment shown in the screen
                         $ultimo_exp_exibido = $line_exp['id'];
 
                     ?>
@@ -328,7 +305,7 @@ if ($_SESSION['id_experimento']) {
             </table>
     <center>
 <?  
-    //adiciona paginacao dos resultados
+    //pages for the list of experiments
     if (($primeiro_exp_exibido < $max['max']) && ($exp_count!=0)) {  ?>
         <a href="ver_experimentos_realizados.php?ant=<?=$primeiro_exp_exibido?>">&lt; previous page</a>
 <?  }
@@ -340,7 +317,7 @@ if ($_SESSION['id_experimento']) {
     </center>
 
     <br/>
-    <!-- formulario que apaga um experimento da base -->
+    <!-- form to delete and experiment in the database -->
     <form method="post" name="exp_del" action="exclui_experimento.php">
     <table align="center" cellspacing="1" cellpadding="5">
         <tr>

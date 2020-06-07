@@ -14,13 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
 
 <?
-//Se ja houver alguma sessao iniciada, destroi-a
+//If session already exists, destroy it
 if (isset($_SESSION['plugin_file'])) {
     session_destroy();
 }
@@ -79,7 +79,7 @@ session_start();
     The <i>Distance</i> function is the responsible to compare two feature vectors. Its arguments are the path of the feature vector files to be compared. The returned value is of <i>double</i> type and it is the <b>distance</b> between the imagens. 
     </li>
 
-    <li>Since you have the source code containing these two functions, you are able to generate the plugin to be inserted into Eva. The plugin generation (DLL or SO) is made when compiling the source code. Below, there are examples of how to compile the source code ir order to generate the plugin. (ps.: in the examples, we consider that the mentioned functions are in the file 'descriptor.c')<br/>
+    <li>Once you have the source code containing these two functions, you are able to generate the plugin to be inserted into Eva. The plugin generation (DLL or SO) is made when compiling the source code. Below, there are examples of how to compile the source code ir order to generate the plugin. (ps.: in the examples, we consider that the mentioned functions are in the file 'descriptor.c')<br/>
 
     <ul>
         <li>Example of how to generate the plugin file (.so) when all the source code is into a single file:<br/>
@@ -97,6 +97,9 @@ session_start();
     <li>The plugin was generated.</li>
 
     </ol>
+    
+    <b>[Important info from 2020]: the <a href="https://github.com/otaviopenatti/libdescriptors" target="_blank">libdescriptors repository</a> already has the source prepared to generate plugins for Eva tool. The code there just need to be compiled and the plugin will be automatically generated according to the specifications above.</b>
+    
 
     <hr size="1"/>
 

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -69,9 +69,9 @@ session_start();
             }
             //alert('descritores='+descritores.length);
             //alert('bases='+bases.length);
-	    //alert('medidas='+medidas.length);
+            //alert('medidas='+medidas.length);
 
-            //Gera listas com os ids dos descritores e das bases
+            //Generate lists with ids from descriptors and databases
             PreencheHidden(document.form_exp.ids_desc, descritores);
             PreencheHidden(document.form_exp.ids_bases, bases);
             PreencheHidden(document.form_exp.ids_medidas, medidas);
@@ -115,7 +115,7 @@ session_start();
             <tr>
                 <td bgcolor="#EEEEEE" width="34%" valign="top">
 <?
-                //DESCRITORES DE COR!!!!!!!!!!!!!!!
+                //Color descriptors
                 $query = 'SELECT id, name FROM descriptor WHERE type=0 ORDER BY id';
                 $result = pg_query($query) or die('Query failed: ' . pg_last_error());
                 $desc_cor_count=0;
@@ -133,7 +133,7 @@ session_start();
                 </td>
                 <td bgcolor="#EEEEEE" width="34%" valign="top">
 <?
-                //DESCRITORES DE TEXTURA!!!!!!!!!!!!!!!
+                //Texture descriptors
                 $query = 'SELECT id, name FROM descriptor WHERE type=1 ORDER BY id';
                 $result = pg_query($query) or die('Query failed: ' . pg_last_error());
                 $desc_textura_count=0;
@@ -151,7 +151,7 @@ session_start();
                 </td>
                 <td bgcolor="#EEEEEE" width="34%" valign="top">
 <?
-                //DESCRITORES DE FORMA!!!!!!!!!!!!!!!
+                //Shape descriptors
                 $query = 'SELECT id, name FROM descriptor WHERE type=2 ORDER BY id';
                 $result = pg_query($query) or die('Query failed: ' . pg_last_error());
                 $desc_forma_count=0;
@@ -166,7 +166,7 @@ session_start();
                 if ($desc_forma_count == 0) echo "No shape descriptor available<br/>";
                 pg_free_result($result);
 
-                //se nao existe nenhum descritor cadastrado, deixa como nula a contagem de descritores
+                //In case of zero descriptors
                 if ($desc_cor_count==0 && $desc_textura_count==0 && $desc_forma_count==0) {
                     $desc_count = 0;
                 } else {
@@ -192,7 +192,7 @@ session_start();
 
             <table border="0" cellspacing="1" cellpadding="5" width="400" bgcolor="#CCCCCC" class="cadastro">
             <input type="hidden" name="ids_bases" value=""/>
-	    <input type="hidden" name="imgdb" value="-1"/> <!--evita problemas qdo houver apenas 1 img_db -->
+	    <input type="hidden" name="imgdb" value="-1"/> <!-- avoid problems when there is only one img_db -->
             <tr>
                 <td bgcolor="#EEEEEE" width="50%">
 <?
@@ -231,7 +231,7 @@ session_start();
 
             <table border="0" cellspacing="1" cellpadding="5" width="400" bgcolor="#CCCCCC" class="cadastro">
             <input type="hidden" name="ids_medidas" value=""/>
-	    <input type="hidden" name="measure" value="-1"/> <!--evita problemas qdo houver apenas 1 medida -->
+	    <input type="hidden" name="measure" value="-1"/> <!--avoid problems when there is only one evaluation measure -->
             <tr>
                 <td bgcolor="#EEEEEE" width="50%">
 <?
