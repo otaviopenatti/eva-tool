@@ -30,7 +30,7 @@ print "Experiment id = ",sys.argv[1]
 extraiTodas_php.main()
 distanciaTodasTodasBases_php.main()
 
-#se opcao de considerar divisao da base nao foi checked, nao faz nada dentro do script
+#if the option to consider image database categorization was not selected, no further action is taken inside the script
 geraArquivosDistancia.main()
 
 print "End ------"
