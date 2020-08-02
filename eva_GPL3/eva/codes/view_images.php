@@ -23,31 +23,20 @@
 session_start();
 /*
 $ cat novo2_id2_distancias_teste12.txt | grep "^class2/class1_10_689_000" | sort -k 3 | head -n 80
-                                               ^nome da img de consulta                          ^qtd de resultados
+                                               ^query image name                          ^number of results
 */
 
-/*
-Parametros: id_experimento, id_base, id_descritor, nome_base
-*/
-    /*
-    echo "POST<pre>";
-    print_r($_POST);
-    echo "</pre>";
 
-    echo "count=".count($_POST)."<br/>";
-    echo "keys=<pre>";
-    print_r(array_keys($_POST));
-    echo "</pre>";
-    */
+// Parameters: id_experimento, id_base, id_descritor, nome_base
 
-    //se veio de uma pagina diferente desta
+
+    //if came from a page different than this one
     if ($_POST) {
-        //pega apenas as chaves de cada posicao do POST
-        $post_keys = array_keys($_POST);
+        $post_keys = array_keys($_POST); //get keys from POST
         $i=0;
         $desc_count=0;
         foreach ($_POST as $post) {
-            //se a chave for "desc" eh pq a posicao atual eh o id de um descritor
+            //if key is 'desc', the current position is a descriptor id
             if (preg_match("/desc/",$post_keys[$i]) > 0) {
                 $descritores[$desc_count] = $post;
                 $desc_count++;
@@ -56,28 +45,16 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
             }
             $i++;
         }
-        //registra dados na secao para evitar perda qdo muda descritor ou imagem de consulta
+        //register data in the SESSION to avoid losing information when changes descriptor or query image
         $_SESSION['id_experimento'] = $id_experimento;
         $_SESSION['descritores'] = $descritores;
     }
 
-//     echo "id_experimento = ".$id_experimento."<br/>";
-//     echo "descritores = <pre>";
-//     print_r($descritores);
-//     echo "</pre>";
-//     echo "descritores[0] = ".$descritores[0]."<br/>";
-
-    //usa variaveis locais para valores importantes
+    //local variables for important values
     $id_experimento = $_SESSION['id_experimento'];
     $descritores = $_SESSION['descritores'];
 
-//     echo "<hr/>id_experimento = ".$id_experimento."<br/>";
-//     echo "descritores = <pre>";
-//     print_r($descritores);
-//     echo "</pre>";
-//     echo "descritores[0] = ".$descritores[0]."<br/>";
-
-    //verifica qual o descritor escolhido
+    //checks which descriptor was selected 
     if ($_GET['descritor']) {
         $id_descritor = $_GET['descritor'];
     } else if ($_SESSION['id_descritor']) {
@@ -85,54 +62,33 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
     } else {
         $id_descritor = $descritores[0];
     }
-    //registra na sessao o descritor em uso
-    $_SESSION['id_descritor'] = $id_descritor;
+    $_SESSION['id_descritor'] = $id_descritor; //registers descriptor in the SESSION
 
-    //Variaveis com os caminhos dos arquivos fv e das imagens
     $path_distancias = "/exp/otavio/results/".$id_experimento."/distances_".$id_descritor."_comClasses.txt";
-    //$path_distancias = "/exp/otavio/results/185/distances_bic_comClasses.txt";
 
-
-    //caso GET esteja vazio, coloca imagem de consulta padrao
+    //if GET is empty, uses a default query image
     if ($_GET['query_img']) {
         $img_consulta = $_GET['query_img'];
     } else {
-        $img_consulta = "/exp/otavio/img_databases/yahoo_2000/jpg00111.jpg";
+        $img_consulta = "/exp/otavio/img_databases/yahoo_2000/jpg00111.jpg"; //REMEMBER TO UPDATE HERE
     }
 
-    //arquivo da imagem de consulta - depende do valor de $img_consulta
     $img_consulta_file = explode("/exp/otavio/", $img_consulta);
     $img_consulta_file = "../".$img_consulta_file[1];
 
-
-    /*****PARAMETROS DE VISUALIZACAO*****/
-    //Quantidade de colunas na tabela de resultados
-    $qtd_colunas_resultados = 5;
+    /***** VISUALIZATION PARAMETERS *****/
+    $qtd_colunas_resultados = 5; //number of columns in the table of results
     $qtd_resultados = 70;
 
-
-    //$consulta = "cat ".$path_distancias." | grep \"^".$img_consulta."\" | head -n ".$qtd_resultados;
-    //como o sort do shell nao funcionou muito bem, o head teve que ser tirado
     $consulta = "cat ".$path_distancias." | grep \"^".$img_consulta."\"";
-
     exec($consulta, $output);
 
-    //precisa ordenar os resultados!!!
-    //usar array_multisort()
-    //array_multisort($output, SORT_ASC);
-
     if (!$output) {
-        echo "<td><h1>Erro nos resultados! <br/> Avise o administrador do sistema!</h1></td>";
+        echo "<td><h1>Error in results!</h1></td>";
         exit(1);
     }
 
-/*
-    echo "Output<pre>";
-    print_r($output);
-    echo "</pre>";
-*/
-
-    //separa as linhas e colunas do array
+    //splits the rows and columns of the array
     $cont=0;
     foreach ($output as $linha) {
         $array_final[$cont] = split("\t", $linha);
@@ -141,19 +97,13 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
         $array_dist[$cont] = $array_final[$cont][2];
         $cont++;
 
-        //coluna 0 = img_consulta
-        //coluna 1 = img_resultado
-        //coluna 2 = distancia entre elas
+        //col 0 = query image (img_consulta)
+        //col 1 = result image (img_resultado)
+        //col 2 = distance between them
 
     }
-    //ordena o array final pela coluna da distancia
-    array_multisort($array_dist, SORT_ASC, $array_final);
-
+    array_multisort($array_dist, SORT_ASC, $array_final); //sorts the array by the "distance" col
     $array_final = array_slice($array_final, 0, $qtd_resultados);
-
-
-
-
 ?>
 
 <html>
@@ -189,7 +139,7 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
         <?$action = "view_images.php"?>
         <form method="get" action="<?=$action?>">
             <select name="descritor" size="1">
-                <!-- esta lista depende do experimento - pegar descritores usados -->
+                <!-- this list depends on the experiment - get descriptors used -->
                 <option value="">--escolha--</option>
                 <?
                 echo "\n";
@@ -211,48 +161,40 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
         </form></li>
         <br/><br/>
         <li>
-        <a href="../ver_experimentos_realizados.php">Ver outros experimentos realizados</a>
+        <a href="../ver_experimentos_realizados.php">Go to other experiments conducted</a>
         </li>
         </ul>
          </td>
       <td>
-           Imagem de consulta:<br/>
+           Query image:<br/>
            <img src="<?=$img_consulta_file?>" alt="<?=$img_consulta?>" border="1" align="middle" style=\"max-width:300px;\" height=200/>
            <br/><br/>
-           Nome: <br/><?=$img_consulta?><br/>
-           <!-- Classe: <?//=$_GET['class']?>-->
+           Name: <br/><?=$img_consulta?><br/>
+           <!-- Class: <?//=$_GET['class']?>-->
          </td></tr>
     </table>
     <br/><br/>
 
     <table cellspacing="1" cellpadding="4" align="center" width="98%">
-    <tr><td colspan="<?=$qtd_colunas_resultados?>" class="resultados_titulo">RESULTADOS</td></tr>
+    <tr><td colspan="<?=$qtd_colunas_resultados?>" class="resultados_titulo">RESULTS</td></tr>
     <tr>
 <?
-
-
-    /*
-    echo "<hr/>ArrayFinal<pre>";
-    print_r($array_final);
-    echo "</pre>";
-    */
-
     $cont=1;
     foreach ($array_final as $linha) {
 
-        //nome do arquivo eh ajustado para o dir local da base de imagens
-        //remove-se a parte comum, a todas as imagens...
+        //file name is adjusted for the image database local directory
+        //removes the common part to all images
         $img_file = explode("/exp/otavio/",$linha[1]);
         $img_file = "../".$img_file[1];
 
-        //o nome da imagem eh apenas o nome do arquivo sem a estrutura de dir
+        //image name should be only file name, no path included
         $img_name = explode("/",$img_file);
         $img_name = $img_name[count($img_name)-1];
 
-        //substitui espacos por %20 nos nomes de arquivos das imagens
+        //replace spaces by %20 in file names
         $img_file = str_replace(" ", "%20", $img_file);
 
-        //nome da imagem
+        //image name
         echo "<td>";
         echo "  <a href=\"view_images.php?query_img=".$linha[1]."\">";
         echo "    <img src=".$img_file." alt=".$img_name." border=\"1\" style=\"max-width:180px;\" height=130/>";
