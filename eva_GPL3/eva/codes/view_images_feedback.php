@@ -22,74 +22,65 @@
 <?php
 include "../util.php";
 
-/*
-OBSERVACAO!!!
-Passei a usar Precision@30 no lugar de Precision@25 pois, segundo o artigo do BIC, 30 eh um 
-numero usado em conferencias TREC (similar ao pooling method)
-*/
-
-//indica que a sessao ira expirar depois de 120 min de inatividade
+//session expires after 120 minutes of inactivity
 ini_set('session.gc_maxlifetime', 120*60);
 session_start();
 
-//echo "SESSION.GC_MAXLIFETIME=".ini_get('session.gc_maxlifetime')."<br/>";
-//echo "SESSION_CACHE_LIMITER =".session_cache_limiter();
-
 $DEBUG = 0;
 
-//definicao da classe utilizada para a lista final
+//class definition used for the final list
 class Imagem{
     var $fv2;
-    var $descritores; //vetor com o indice sendo o $id_descritor e valor sendo
-                //uma string com as posicoes separadas por virgula
+    var $descritores; //vector with index --> $id_descritor as index and
+                                  //value --> string with positions separated by coma
+                      
 }
 
 function CriaListaFinal($conn, $id_experimento, $descritores, $img_consulta, $qtd_resultados) {
     $lista_final = array();
     $cont_final = 1;
-    $DEBUG = $GLOBALS[DEBUG];  //pega o valor do debug de fora da funcao
+    $DEBUG = $GLOBALS[DEBUG];  //debug value comes from outside of the function
 
     foreach ($descritores as $id_descritor) {
         $consulta = "SELECT * FROM (SELECT fv2, distance FROM distance WHERE idexperiment=".$id_experimento." AND iddescriptor='".$id_descritor."' ";
         $consulta.= "AND fv1='".trim($img_consulta)."' ORDER BY distance LIMIT ".$qtd_resultados.") AS interna ORDER BY distance,fv2";
         if ($DEBUG) echo "consulta=".$consulta."<br>";
         $result = pg_query($conn, $consulta) or die('Query failed: ' . pg_last_error());
-        //CRIAR UMA LISTA COM AS 30 PRIMEIRAS IMGS DO DESCRITOR
-        //ABAIXO SAO LISTADAS AS 30 PRIMEIRAS IMGS DO DESCRITOR, BASTA COLOCA-LAS NUMA LISTA
+        //Creates a list with top 30 images of the descriptor
+        //below, we have the top 30 images of each descriptor, just need to put them in a list
         if ($DEBUG) {
-            echo "LISTA DO DESCRITOR ".$id_descritor.":<br/>";
+            echo "LIST FROM DESCRIPTOR: ".$id_descritor.":<br/>";
             echo "<ul>";
         }
 
-        //contador do vetor de cada descritor
+        //counter for the vector of each descriptor
         $cont_desc = 1;
         while ($line = pg_fetch_array($result, null, PGSQL_ASSOC)) {
-            //lista de cada descritor
+            //list of each descriptor
 
-
-            //colocando todos os fv2's na lista final sem repeticoes
+            //inserting all fv2's in the final list without repetitions
             $flag = 0;
-            //percorre a lista de valores
+            //scans the list of values
             foreach($lista_final as $fv2){
-                //Caso este fv2 ja esteja na lista sai do loop com flag = 1;
+                //if this fv2 is already in the list, breaks the loop with flag=1;
                 if ((isset($fv2->fv2)) && (strcmp($fv2->fv2,$line['fv2'])==0)) {
-                    //utilizando como indice o id do descritor e guardando as posicoes...
-                    $fv2->descritores[$id_descritor].= $cont_desc;//verificar como concatenar os dados aqui!!!!
+                    //using as index the descriptor id and saving the positions
+                    $fv2->descritores[$id_descritor].= $cont_desc; 
                     $flag=1;
                     break;
                 }
 
             }
 
-            //$flag = 0 no caso de nao ter encontrado, e insere o valor em mais uma posicao do vetor
+            //$flag is 0 if not found, and inserts the value in another position in the vector
             if ($flag == 0){
                 $lista_final[$cont_final] = new Imagem;
                 $lista_final[$cont_final]->fv2 = $line['fv2'];
-                //utilizando como indice o id do descritor e guardando as posicoes...
+                //using as index the descriptor id and saving the positions
                 $lista_final[$cont_final]->descritores = array($id_descritor => $cont_desc);
                 $cont_final++;
             }
-            //incrementando o contador de posicoes...
+            //incrementing the counter of positions
             $cont_desc++;
             if ($DEBUG) echo "<li>".$line['fv2']."</li>";
         }
@@ -103,22 +94,18 @@ function CriaListaFinal($conn, $id_experimento, $descritores, $img_consulta, $qt
 }
 
 function CalculaPrecision($lista_final, &$p10, &$p20, &$p30) {
-    $DEBUG = $GLOBALS[DEBUG];  //pega o valor do debug de fora da funcao
-    //$DEBUG = 1;
+    $DEBUG = $GLOBALS[DEBUG];  //debug value comes from outsite the function
 
     if ($DEBUG) {
-        echo "<hr/>SELECIONADAS<pre>";
+        echo "<hr/>SELECTED<pre>";
         print_r($_POST["selecionadas"]);
         echo "</pre><hr/>";
     }
 
     foreach ($_POST["selecionadas"] as $selecionada) {
-        if ($DEBUG) echo "avaliando selecionada: <b>".($selecionada-1)."</b><br/><blockquote>";
-        //foreach ($lista_final[$selecionada]->descritores as $descritor => $lista_posicoes){
+        if ($DEBUG) echo "evaluating selected: <b>".($selecionada-1)."</b><br/><blockquote>";
         foreach ($lista_final[($selecionada-1)]->descritores as $descritor => $posicao){
-            if ($DEBUG) echo "selecionada->descritores: ".$descritor."-".$posicao."<br/>";
-            //$posicoes = explode($lista_posicoes);
-            //foreach($posicoes as $posicao){
+            if ($DEBUG) echo "selected->descriptors: ".$descritor."-".$posicao."<br/>";
                 if ($posicao<=10){
                     if (isset($p10[$descritor])){
                         $p10[$descritor]++;
@@ -153,20 +140,19 @@ function CalculaPrecision($lista_final, &$p10, &$p20, &$p30) {
                         $p30[$descritor] = 1;
                     }
                 }
-            //}
         }
         if ($DEBUG) echo "</blockquote>";
     }
 }
 
 function InserePrecisionBD($conn, $descritores, $p10, $p20, $p30) {
-    $DEBUG = $GLOBALS[DEBUG];  //pega o valor do debug de fora da funcao
+    $DEBUG = $GLOBALS[DEBUG];  //debug value comes from outsite the function
 
-    //precision calculado pelo numero total (10,20,30) de imagens de cada descritor
+    //precision is computed from the total number of images per descriptor (10,20,30)
 
     if ($DEBUG) {
         echo "<hr/>";
-        echo "VALORES DE PRECISION CALCULADOS PARA CADA DESCRITOR<br/>";
+        echo "PRECISION VALUES COMPUTED FOR EACH DESCRIPTOR<br/>";
         echo "imagem considerada como consulta: ".$_SESSION['lista_consultas'][$_SESSION['lista_consultas_indice']]."<br>";
     }
     foreach($descritores as $desc) {
