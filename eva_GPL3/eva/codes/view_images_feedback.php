@@ -31,7 +31,7 @@ $DEBUG = 0;
 //class definition used for the final list
 class Imagem{
     var $fv2;
-    var $descritores; //vector with index --> $id_descritor as index and
+    var $descritores; //vector with index --> $id_descritor and
                                   //value --> string with positions separated by coma
                       
 }
@@ -72,7 +72,7 @@ function CriaListaFinal($conn, $id_experimento, $descritores, $img_consulta, $qt
 
             }
 
-            //$flag is 0 if not found, and inserts the value in another position in the vector
+            //$flag is 0 if fv2 was not found, and inserts the value in another position in the vector
             if ($flag == 0){
                 $lista_final[$cont_final] = new Imagem;
                 $lista_final[$cont_final]->fv2 = $line['fv2'];
@@ -153,56 +153,47 @@ function InserePrecisionBD($conn, $descritores, $p10, $p20, $p30) {
     if ($DEBUG) {
         echo "<hr/>";
         echo "PRECISION VALUES COMPUTED FOR EACH DESCRIPTOR<br/>";
-        echo "imagem considerada como consulta: ".$_SESSION['lista_consultas'][$_SESSION['lista_consultas_indice']]."<br>";
+        echo "query image: ".$_SESSION['lista_consultas'][$_SESSION['lista_consultas_indice']]."<br>";
     }
     foreach($descritores as $desc) {
         if ($DEBUG) {
-            echo "descritor=".$desc."<br/>";
+            echo "descriptor=".$desc."<br/>";
             echo "p10 = ".($p10[$desc]/10)."<br/>";
             echo "p20 = ".($p20[$desc]/20)."<br/>";
             echo "p30 = ".($p30[$desc]/30)."<br/>";
         }
 
-        //echo "indice atual:    ".$_SESSION['lista_consultas_indice']."<br/>";
-        //echo "indice prox consulta: ".$_POST['proxima_consulta']."<br>";
         if ($_SESSION['lista_consultas_indice'] < $_POST['proxima_consulta']) {
-        //if (!array_search($_SESSION['lista_consultas'][$_SESSION['lista_consultas_indice']],$_SESSION['lista_consultas_avaliadas'])) {
             $insere = "INSERT INTO experimentuserevaluation (idexperiment,iddescriptor,fvquery,p10,p20,p25,insertion_timestamp, user_email) VALUES ";
             $insere.= "(".$_SESSION['id_experimento'].",'".$desc."','".($_SESSION['lista_consultas'][$_SESSION['lista_consultas_indice']])."',".($p10[$desc]/10).",".($p20[$desc]/20).",".($p30[$desc]/30).",CURRENT_TIMESTAMP,'".$_SESSION['user_email']."')";
             if ($DEBUG) echo "insere=".$insere."<br/>";
             $result_insere = pg_query($conn, $insere) or die('Query failed: ' . pg_last_error());
             pg_free_result($result_insere);
             if ($DEBUG) echo "<hr/>";
-
-            //atualiza a lista de consultas ja avaliadas - insere na lista a consulta avaliada
-            /*if ($_SESSION['lista_consultas_avaliadas'][count($_SESSION['lista_consultas_avaliadas'])-1] != $_SESSION['lista_consultas'][$_SESSION['lista_consultas_indice']]) {
-                array_push($_SESSION['lista_consultas_avaliadas'], $_SESSION['lista_consultas'][$_SESSION['lista_consultas_indice']]);
-            }*/
-
         } else {
-            if ($DEBUG) echo "VOCE DEU UM RELOAD NA PAGINA OU USOU O BOTAO DE VOLTAR DO BROWSER<br/>";
-            //nesse caso evita que os dados sejam reinseridos no banco
+            if ($DEBUG) echo "Reload/refresh used or browser's back button used!<br/>";
+            //in this case, avoids inserting the data again in the database
         }
     }
 }
 
 function PegaExperimentoDescritores() {
-    $DEBUG = $GLOBALS[DEBUG];  //pega o valor do debug de fora da funcao
+    $DEBUG = $GLOBALS[DEBUG];  //debug value comes from outsite the function
 
     if ($DEBUG) {
-        echo "Entrou no IF POST, mas ja tem os seguintes dados:<br/>";
+        echo "Entered in the IF POST, but already have the following data:<br/>";
         echo "id_experimento=".$_SESSION['id_experimento']."<br/>";
-        echo "Descritores<pre>";
+        echo "Descriptors<pre>";
         print_r($_SESSION['descritores']);
         echo "</pre>";
     }
 
-    //pega apenas as chaves de cada posicao do POST
+    //gets only the keys of each position in the POST
     $post_keys = array_keys($_POST);
     $i=0;
     $desc_count=0;
     foreach ($_POST as $post) {
-        //se a chave for "desc" eh pq a posicao atual eh o id de um descritor
+        //"desc" key indicates that the current position is a descriptor id
         if (preg_match("/desc/",$post_keys[$i]) > 0) {
             $descritores[$desc_count] = $post;
             $desc_count++;
@@ -211,41 +202,40 @@ function PegaExperimentoDescritores() {
         }
         $i++;
     }
-    //registra dados na secao para evitar perda qdo muda descritor ou imagem de consulta
+    //register the data in the SESSION to avoid losing information when changing descriptor or query image
     $_SESSION['id_experimento'] = $id_experimento;
     if ($desc_count > 0)
         $_SESSION['descritores'] = $descritores;
 
-    //registra email do avaliador na secao
+    //registers the evaluator's e-mail in the SESSION 
     if ($_POST['email']) {
         $_SESSION['user_email'] = $_POST['email'];
-    } else if (!$_SESSION['user_email']) { //se nao veio email por post e nao existe na secao ainda, registra email padrao
-                                           //isto acontece qdo uso acesso este php pela lista de experimentos realizados
+    } else if (!$_SESSION['user_email']) { //if there is no e-mail in the POST and there is no SESSION yet, register a default e-mail
+                                           //this happens if this page is accessed from the list of executed experiments
         $_SESSION['user_email'] = "padrao@padrao.com";
     }
 }
 
 function PegaListaConsultas($id_experimento) {
-    $DEBUG = $GLOBALS[DEBUG];  //pega o valor do debug de fora da funcao
+    $DEBUG = $GLOBALS[DEBUG];  //debug value comes from outsite the function
 
-    //verifica se existe lista de imagens de consulta (em arquivo)
+    //check if there is a query list (file)
     if (file_exists("../results/".$id_experimento."/query_list.txt")) {
 
-        //cria um combo_box com as imgs de consulta da lista
+        //creates a combo box with the query images
         $arq_query_list = file("../results/".$id_experimento."/query_list.txt");
         $lista_consultas = explode("##",$arq_query_list[0]);
 
-        //LEMBRAR DE AVANCAR NESTA LISTA A CADA VEZ QUE O USUÁRIO TERMINAR DE AVALIAR OS RESULTADOS DE UMA DETERMINADA CONSULTA
-        //TALVEZ, SE GUARDAR A LISTA NA SECAO, FIQUE MAIS SIMPLES.
+        //Remember to advance in this list every time the user concludes the evaluation of a given query image
+        //Maybe, if we store the query list in the SESSION, it will be simpler
 
         $_SESSION['lista_consultas'] = $lista_consultas;
 
-        //indica o indice da imagem atual de consulta
+        //indicates the index of the current query image
         $_SESSION['lista_consultas_indice'] = 0;
-        //$_SESSION['lista_consultas_avaliadas'] = array(); //usado para prevenir dupla insercao em caso de reload da pagina
 
     } else {
-        echo "ERRO: nao existe arquivo com as imagens de consulta. Impossivel realizar avaliacao!<br/>";
+        echo "ERROR: There is not query list file!<br/>"
         exit(1);
     }
 }
@@ -261,13 +251,11 @@ function PegaListaConsultas($id_experimento) {
 
   <script language="Javascript">
     function swap( id ) {
-        //altera classe da celula
+        //changes the cell class
         classe = ( document.getElementById( id ).className == 'unselected' ) ? 'selected' : 'unselected';
         document.getElementById( id ).className = classe;
 
-        //altera checked
         selected = document.imagens['selecionadas[]'];
-        //alert('checkvalue['+id+']='+selected[id-1].checked);
         selected[id-1].checked = (selected[id-1].checked == true)?false:true;
     }
   </script>
@@ -286,65 +274,62 @@ function PegaListaConsultas($id_experimento) {
         <p class="notopgap">&nbsp;
     <!--************************ BORDAS ARREDONDADAS! ************************-->
 <?php
-    $fim_exp = 0; //indica qdo o experimento acaba
+    $fim_exp = 0; //indicates end of experiment
 
-    //CONEXAO COM O BD
     $dbconn = connect();
 
     if ($DEBUG) {
-        if ($_SESSION) echo "possui sessao<br/>";
-        else echo "sem sessao<br/>";
+        if ($_SESSION) echo "has session<br/>";
+        else echo "no session<br/>";
     }
 
-    //Se ele passou pelo menos pela primeira pagina, mas nao existe sessao, eh pq a sessao expirou
+    //if the user passed at least for the 1st page and there is no SESSION, it is because SESSION expired
     if (isset($_POST["proxima_consulta"]) && !$_SESSION) {
-        echo "Sess&atilde;o expirou!<br/> Imposs&iacute;vel continuar avalia&ccedil;&atilde;o!<br/>";
+        echo "Session expired!<br/>Impossible to continue the evaluation!<br/>";
         exit();
     }
 
     ////////////////////////////////////////////////////////////////
-    ///////////TRATAMENTO DAS SELECIONADAS ////////////////////////
+    ///////////TREATMENT OF SELECTED IMAGES ////////////////////////
     if (isset($_POST["selecionadas"])) {
         if ($DEBUG) {
-            if ($_SESSION) echo "veio post selecionadas e tem sessão, pode continuar...";
-            else  echo "veio post selecionadas, mas nao tem sessao!";
+            if ($_SESSION) echo "POST has selected images and SESSION exists, so can continue...";
+            else  echo "POST has selected images but there is no SESSION!";
         }
 
         if ($DEBUG) {
             echo "<hr/>";
-            echo "lista de selecionadas";
+            echo "list of selected images";
             echo "<pre>";
             print_r($_POST["selecionadas"]);
             echo "</pre>";
         }
         $lista_final = $_SESSION["lista_final"];
         if ($DEBUG) {
-            echo "<hr/>LISTA FINAL USADA PARA VERIFICAR AS SELECIONADAS";
+            echo "<hr/>FINAL LIST USED TO CHECK THE SELECTED IMAGES";
             echo "<pre>";
             print_r($lista_final);
             echo "</pre>";
         }
 
-        //cada um com o indice [$id_descritor]
+        //each one with [$id_descritor] as index
         $p10 = array(); $p20 = array(); $p30 = array();
-        CalculaPrecision($lista_final, &$p10, &$p20, &$p30); //calcula o precision de todos os descritores usados
-        InserePrecisionBD($dbconn, $_SESSION['descritores'], $p10, $p20, $p30); //insere no bd os valores de precision calculados
+        CalculaPrecision($lista_final, &$p10, &$p20, &$p30); //computes the Precision metric of all descriptors used
+        InserePrecisionBD($dbconn, $_SESSION['descritores'], $p10, $p20, $p30); //inserts Precision values in the database
     } else {
-        //CASO NAO TENHA SELECIONADO NENHUMA, NAO ESTAVA INSERINDO NO BD. PRECISA INSERIR ZEROZERO
-        if ($_SESSION['lista_consultas']) { //se ja existe a lista de consultas eh pq ja avaliou alguma consulta
-            if ($DEBUG) echo "nao selecionou nenhuma mas possui uma lista na secao!!<br>";
-            //insere zero nos precisions no bd
-            InserePrecisionBD($dbconn, $_SESSION['descritores'], $p10, $p20, $p30); //insere no bd os precision iguais a zero
+        if ($_SESSION['lista_consultas']) { //if query list exists, it is because already evaluated some query image
+            if ($DEBUG) echo "none selected but there is a query list in the session!<br>";
+            InserePrecisionBD($dbconn, $_SESSION['descritores'], $p10, $p20, $p30); //inserts zero as Precision in the dataset
         } else {
-            if ($DEBUG) echo "nao selecionou nenhuma e NAO possui a lista na secao!!<br>";
+            if ($DEBUG) echo "none selected and there is NO query list in the session!<br>";
         }
     }
-    ///////////TRATAMENTO DAS SELECIONADAS  - FIM//////////////////
+    ///////////TREATMENT OF SELECTED IMAGES - END /////////////////
     ///////////////////////////////////////////////////////////////
 
 
     ////////////////////////////////////////////////////////////////
-    //////////VERIFICACAO DO POST - QDO VEM DA PAG INICIAL /////////
+    //////////VERIFYING THE POST - WHEN COMING FROM INITIAL PAGE ///
     //se veio de uma pagina diferente desta
     if ($_POST && (!$_SESSION['id_experimento'] || !$_SESSION['descritores'])) {
         PegaExperimentoDescritores(); //se eh a primeira consulta, pega dados do post e registra na sessao
@@ -358,86 +343,78 @@ function PegaListaConsultas($id_experimento) {
         echo "id_experimento = ".$id_experimento."<br/>";
         echo "qtd_descritores = ".count($descritores)."<br/>";
     }
-    //////VERIFICACAO DO POST - QDO VEM DA PAG INICIAL  - FIM ///////
+    /////VERIFYING THE POST - WHEN COMING FROM INITIAL PAGE - END //
     ////////////////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////////////////
-    ///////VERIFICACAO DA LISTA DE CONSULTAS ///////////////////////
-    //verifica se a lista de imagens de consulta ja esta na secao
+    ///////VERIFYING THE QUERY LIST ////////////////////////////////
+    //checking if the query list is already in the session
     if (!$_SESSION['lista_consultas']) {
-        PegaListaConsultas($id_experimento); //pega lista de imgs de consulta em arquivo e registra-a na sessao
-                                             //assim como o indice da consulta atual sendo avaliada
+        PegaListaConsultas($id_experimento); //register the list of query images in the session (from file)
+                                             //as well as the index of the current query images being evaluated
     } else {
-        //como a lista de consultas ja esta na secao, copia o indice recebido por POST para o indice atual
+        //as the query list is already in the session, copies the index received by POST to the current index
         if ($_POST['proxima_consulta']) {
 
-            $_SESSION['lista_consultas_indice'] = $_POST['proxima_consulta'];  //realiza copia
+            $_SESSION['lista_consultas_indice'] = $_POST['proxima_consulta'];  //copying
 
             if ($DEBUG) {
                 echo "proxima_consulta=".$_POST['proxima_consulta']."<br/>";
                 echo "qtd consultas=".count($_SESSION['lista_consultas'])."<br/>";
             }
 
-            if ($_POST['proxima_consulta'] == count($_SESSION['lista_consultas'])) { //verifica se chegou na ultima consulta
+            if ($_POST['proxima_consulta'] == count($_SESSION['lista_consultas'])) { //check if it is the last query image
                 $fim_exp = 1;
             }
         }
     }
-    ///////VERIFICACAO DA LISTA DE CONSULTAS - FIM /////////////////
+    ///////VERIFYING THE QUERY LIST - END //////////////////////////
     ////////////////////////////////////////////////////////////////
-    if ($DEBUG) echo "FIM_EXP=".$fim_exp."<br>";
-    if (!$fim_exp) { //se o experimento ainda nao acabou, monta pagina
+    
+    if ($DEBUG) echo "EXPERIMENT END = ".$fim_exp."<br>";
+    if (!$fim_exp) { //if the experiment has not finished yet, creates the page
 
         $lista_consultas = $_SESSION['lista_consultas'];
 
-        //pega a consulta considerando o indice da secao
+        //gets the query images considering the index in the session
         $img_consulta = $lista_consultas[$_SESSION['lista_consultas_indice']];
         $img_consulta_file = AdjustImageSource($img_consulta);  
 
-        //Trata casos com imgs com aspas simples ou barra ao contrario no nome do arquivo
+        //dealing with single quotes of back slash in the file name
         if (preg_match("/'/",$img_consulta)) {
             $img_consulta = str_replace("'","''",$img_consulta);
             $img_consulta = str_replace("\\","",$img_consulta);
         }
 
-        /*****PARAMETROS DE VISUALIZACAO*****/
-        //Quantidade de colunas na tabela de resultados
-        $qtd_colunas_resultados = 5;
-        $qtd_resultados = 30; //MUDEI de 25 para 30 e alterei os nomes das variaveis $p25 para $p30
+        /*****VISUALIZATION PARAMETERS*****/
+        $qtd_colunas_resultados = 5; //number of columns in the table of results
+        $qtd_resultados = 30;
 
-        //CONSULTA: para experimento em questao e considerando o descritor id_descritor, ordena os resultados pela distancia e...
-        //...pega apenas as 'qtd_resultados' primeiras imagens; ordena entao estas imagens pela distancia e pelo nome.
-        //dessa maneira fica mais rápido do que ordenar por distance e fv2 de uma só vez.
-        //neste caso, considerar apenas as 30 primeiras imagens: qtd_resultados=30;
-        //FAZER ISSO PARA CADA DESCRITOR DO EXPERIMENTO:
-
-        ///////CRIANDO LISTA COMBINADA DOS DESCRITORES /////////////////
-        //Para a lista final um vetor
+        ///////CREATING THE COMBINED LIST OF DESCRIPTORS /////////////////
         $lista_final = CriaListaFinal($dbconn, $id_experimento, $descritores, $img_consulta, $qtd_resultados);
-        //colocando a lista final na sessão
-        //$_SESSION["lista_final"] = $lista_final;
-        //IMPRIMINDO A LISTA FINAL PARA VER SE ELA FICOU MONTADA CORRETAMENTE
+        //$_SESSION["lista_final"] = $lista_final; //inserting the final list in the session
         if ($DEBUG) {
-            echo "LISTA COMBINADA DOS DESCRITORES (lista_final -> size=".count($lista_final)."):<br>";
+            //PRINTING THE FINAL LIST TO CHECK IF IT WAS CORRECTLY CREATED
+            echo "Final list of descriptors (lista_final -> size=".count($lista_final)."):<br>";
             echo "<pre>";
             print_r($lista_final);
             echo "</pre>";
             echo "<hr/>";
         }
 
-        //cria lista de indices randomicos
+        //creates a list of random indices
         srand((double) microtime()*1000000);
-        $indices = range(1,count($lista_final)); //cria uma lista de numeros sequenciais de 1 ao tamanho da lista final
-        shuffle($lista_final); //embaralha a lista - ATENCAO!!! shuffle faz o array iniciar do zero
-                                                //no meu caso isto influencia no calculo das selecionadas!!!
+        $indices = range(1,count($lista_final)); //creates a list of sequential numbers from 1 to the size of the final list
+        shuffle($lista_final); //shuffles the list - ATTENTION: shuffle makes the array to start from zero
+                                                //this has impact on the computation of the selected images
         if ($DEBUG) {
-            echo "LISTA FINAL EMBARALHADA:<br>";
+            echo "SHUFFLED FINAL LIST:<br>";
             echo "<pre>";
             print_r($lista_final);
             echo "</pre>";
             echo "<hr/>";
         }
-        //colocando a lista final embaralhada na sessão
+        //inserting the shuffled final list in the session
         $_SESSION["lista_final"] = $lista_final;
 
 ?>
@@ -449,7 +426,7 @@ function PegaListaConsultas($id_experimento) {
            Query image:<br/>
            <img src="<?=$img_consulta_file?>" alt="<?=$img_consulta?>" border="1" align="middle" style=\"max-width:300px;\" height=200/>
            <br/><br/>
-           <? //tratando nome da imagem de consulta para exibir apenas nome do arquivo
+           <? //preparing query image name to show only file name
                $img_temp_name = explode("/", $img_consulta);
                $img_temp_name = $img_temp_name[count($img_temp_name)-1];
            ?>
@@ -459,20 +436,17 @@ function PegaListaConsultas($id_experimento) {
     <br/><br/>
     <form action="view_images_feedback.php" method="post" name="imagens">
         <input type="hidden" name="id_experimento" value="<?=$id_experimento;?>">
-        <!-- nao sei se ja existe esse campo, mas para ter certeza...eh q eu nao encontrei -->
         <input type="hidden" name="consulta_anterior" value="<?=$img_consulta;?>">
     <table cellspacing="3" cellpadding="4" align="center" width="98%">
     <tr><td colspan="<?=$qtd_colunas_resultados?>" class="resultados_titulo">RESULTS</td></tr>
     <tr>
 <?
         $cont=1;
-        //ESSE WHILE DEVE PERCORRER AS IMAGENS DA LISTA FINAL, E NAO USAR NADA DO BANCO, POIS OS DADOS DO BANCO JA FORAM OBTIDOS ACIMA
+        //this loop should scan all images in the final list; and should not use info from the database, as the data in the database were already obtained above
         $cont_lista_final = 1;
         foreach ($lista_final as $fv2) {
-            //$img_file = AdjustImageSource($fv2->fv2, &$img_name);
-            //$img_file = AdjustImageSource($img_db_root, $fv2->fv2);
             $img_file = AdjustImageSource($fv2->fv2);
-            //o nome da imagem eh apenas o nome do arquivo sem a estrutura de dir
+            //image name should be only the file name, without the full path
             $img_name = explode("/",$img_file);
             $img_name = $img_name[count($img_name)-1];
 
@@ -481,13 +455,12 @@ function PegaListaConsultas($id_experimento) {
             echo "    <input type=\"checkbox\" name=\"selecionadas[]\" value=\"".$cont_lista_final."\" width=\"100\" class=\"checkHidden\"/>";
             echo "<br/>".$img_name;
             if ($DEBUG) {
-                echo "<br/>descritores que a recuperaram (id e posicao):<br/>";
+                echo "<br/>descriptors that retrieved this image (id and position):<br/>";
                 echo "<pre>";
                 print_r($fv2->descritores);
                 echo "</pre>";
             }
-            //echo "<br/>".$line[distance]."<br/>";
-            //ACHO QUE NAO VAMOS EXIBIR A DISTANCIA
+            //echo "<br/>".$line[distance]."<br/>"; //distance value is not shown currently
             echo "</td>\n";
             if (!($cont%$qtd_colunas_resultados)) {
                 echo "</tr>\n<tr>";
@@ -500,9 +473,7 @@ function PegaListaConsultas($id_experimento) {
         <tr>
             <td colspan="<?=$qtd_colunas_resultados; ?>">
             <?
-                //echo "qtde_consultas=".count($_SESSION['lista_consultas'])."<br/>";
-                //echo "consulta_atual=".$_SESSION['lista_consultas_indice']."<br/>";
-                //verifica se existe proxima consulta, ou se ja percorreu todas as consultas do arquivo
+                //checks if there is a next query or if it has already visited all queries in the file
                 if (!(($_SESSION['lista_consultas_indice']+1) >= count($_SESSION['lista_consultas']))) {
             ?>
                     <input type="hidden" name="proxima_consulta" value="<?=($_SESSION['lista_consultas_indice']+1)?>"/>
@@ -521,7 +492,6 @@ function PegaListaConsultas($id_experimento) {
     </form>
 <?
     } else {
-        //FIM DO EXPERIMENTO - ultima consulta foi avaliada
         echo "<center><h2>LAST QUERY IMAGE EVALUATED!<br/>END OF THE EXPERIMENT!<br/>THANK YOU!<br/><br/></h2></center>";
     }
 ?>
@@ -536,6 +506,6 @@ function PegaListaConsultas($id_experimento) {
 </html>
 
 <?
-    //fecha conexao
+    //close connection
     pg_close($dbconn);
 ?>
