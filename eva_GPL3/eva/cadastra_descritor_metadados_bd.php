@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -42,7 +42,7 @@ if (!isset($_SESSION['plugin_file']) || !isset($_SESSION['verifica'])) {
         print "Autor: ".$_POST["autor"]."<br/>";
         */
 
-        //nome do arquivo sem a extensao
+        //file name without extension
         $id_descriptor = substr($_SESSION['plugin_file'],0,strpos($_SESSION['plugin_file'], "."));
 
         include "util.php";
@@ -54,7 +54,6 @@ if (!isset($_SESSION['plugin_file']) || !isset($_SESSION['verifica'])) {
         $query = "INSERT INTO descriptor (id, name, author, type) VALUES ('$id_descriptor', '$_POST[nome]', '$_POST[autor]', '$_POST[tipo]')";
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 
-        //echo "CADASTROU!!!!!";
 ?>
 <html>
     <head>

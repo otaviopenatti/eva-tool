@@ -14,19 +14,18 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
 
 <?
-//Se ja houver alguma sessao iniciada, destroi-a
+//If session already exists, destroy it
 if (isset($_SESSION['plugin_file'])) {
     session_destroy();
 }
 
 session_start();
-//echo "session_id=".session_id();
 ?>
 <html>
     <head>
@@ -59,7 +58,7 @@ session_start();
     $dbconn = connect();
 
     // Performing SQL query
-    //Seleciona as 20 tabelas que ocupam mais espaco em disco
+    //Selects the 20 biggest tables (in terms of in disk space)
     $query = 'SELECT relname, relfilenode, relpages FROM pg_class ORDER BY relpages DESC LIMIT 20';
     $result = pg_query($query) or die('Query failed: ' . pg_last_error());
 
@@ -74,7 +73,7 @@ session_start();
             </tr>
 <?
                 while ($line = pg_fetch_array($result, null, PGSQL_ASSOC)) {
-                    //calcula o tamanho da tabela em GB: multiplica a qtd de paginas por 8KB e divide duas vezes por 1024.
+                    //computes the table size in GB: multiply the number of pages per 8KB and divide by 1024 twice
                     $tamanho = (($line['relpages']*8) / 1024) / 1024;
 ?>
                 <tr>

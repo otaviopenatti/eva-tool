@@ -38,7 +38,7 @@ fi
 cd $collection_dir
 files=`find . | grep $extension | sort`
 
-# volta para o diretório de execução e redireciona saída para /dev/null
+#go back to the execution directiry and redirect output to /dev/null
 cd - >> /dev/null 
 
 i=0

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -42,42 +42,34 @@ function connect() {
 }
 
 //--------------------------------------------
-//FUNCOES USADAS NAS TELAS DE VISUALIZACAO DAS IMGS////////////////
+//Functions used in the image visualization tools
 
-//ajusta source da imagem
-//troca o diretorio fisico pelo diretorio do apache
-//apenas remove do caminho da imagem a parte anterior a '/img_databases/'
-//entrada:         $img = caminho original da imagem
+//Adjust image source - replace directory by Apache directory
+//only removes the first part of image source path (before '/img_databases/')
+//input: $img = original image source path
 function AdjustImageSource($img) {
-    //echo "img=".$img."<br>";
 
-    //quebra path no diretorio img_databases --> isso pode dar problema se o path da base tiver a string 'img_databases'
+    //split on 'img_databases'; this can have problems if other parts of the path have the 'img_databases' string
     $img_db_dir = explode("img_databases/", $img);
-    //echo "img_db_dir=<pre>".print_r($img_db_dir)."</pre><br>";
-    $img_db_dir = $img_db_dir[count($img_db_dir)-1]; //copia a parte da direita da string (pois esta contem o caminho da imagem)
-    //echo "img_db_dir=".$img_db_dir."<br>";
+    $img_db_dir = $img_db_dir[count($img_db_dir)-1]; //image path
 
-    //adiciona o caminho '../img_databases/' da ferramenta no caminho da imagem
+    //includes '../img_databases/' in the path string
     $img_file = "../img_databases/".$img_db_dir;
-    //echo "img_file=".$img_file."<br/>";
 
-    //trata casos com aspas simples ou barra ao contrario no nome
+    //treating cases with single quotes or backslash 
     if (preg_match("/'/",$img_file)) {
         $img_file = str_replace("\'","'",$img_file);
     } else {
-        //trata casos com uma barra ao contrario no nome do arquivo 
+        //cases with backslash
         $img_file = str_replace("\\","#",$img_file);
         $img_file = str_replace("##","\\",$img_file);
     }
 
-    //substitui espacos por %20 nos nomes de arquivos das imagens
+    //replace spaces by %20
     $img_file = str_replace(" ", "%20", $img_file);
 
-    //echo "img_file=".$img_file."<br/>";
     return $img_file;
 
 }
 
-
-//
 ?>

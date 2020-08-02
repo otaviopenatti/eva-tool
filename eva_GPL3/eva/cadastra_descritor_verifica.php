@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -87,10 +87,8 @@ if (!isset($_SESSION['plugin_file'])) {
 <?
     $filename = "/tmp/resultado_verifica_".$_SESSION['plugin_file'].".txt";
     $comando = "python verifica/verifica.py ".$_SESSION['plugin_file']." 2>&1 | cat";
-    //$comando = "python -V 2>&1 | cat";
     exec($comando, $output, $status);
 
-    //echo "arquivo (depois python) ".$filename." existe? ".file_exists($filename)."<br/>";
     if (file_exists($filename)) {
 
         $handle = fopen($filename, "r");
@@ -98,9 +96,8 @@ if (!isset($_SESSION['plugin_file'])) {
         fclose($handle);
         unlink($filename);
 
-        //$status
     } else {
-        $status = 8; //erro no plugin causou abort no python
+        $status = 8; //error in plugin cause python to abort
     }
     ?>
     Plugin verification:
@@ -149,14 +146,14 @@ if (!isset($_SESSION['plugin_file'])) {
     ?>
         <a href="cadastra_descritor.php">Read the instructions again and send a new version.</a>
     <?
-        //apaga arquivo enviado
+        //delete uploaded file
         unlink("descriptors/$_SESSION[plugin_file]");
 
     } else {
     ?>
         <a href="cadastra_descritor_metadados.php">Next step</a>
     <?
-        $_SESSION['verifica'] = 1; //verificacao OK
+        $_SESSION['verifica'] = 1; //verification is OK
     }
     ?>
         </b>

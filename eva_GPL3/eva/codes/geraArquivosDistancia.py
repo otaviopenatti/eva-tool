@@ -30,32 +30,30 @@ import util #arquivo de funcoes uteis ao python
 file_extensions = ('txt')
 
 #########################################################################
-# Parametros principais:
-# - ID do experimento
+# Main parameter
+# - Experiment id
 #
-# SEM O if __name__ nao dah pra chamar pelo shell!
-#if __name__=="__main__":
 def main():
 
     ini_total = datetime.now()
 
-    #CONEXAO COM O POSTGRESQL
+    #POSTGRESQL connection
     try:
         conn=util.connect()
     except:
-        print "Erro na conexao com o banco de dados"
+        print "Error connecting to the database!"
         raise
         sys.exit()
     cur = conn.cursor()
 
-    #Path dos resultados (fvs gerados)
+    #Path for the results (generated feature vectors)
     id_exp = sys.argv[1]
     path_results = "results/"+id_exp+"/"
 
     print "\n**********************************************"
-    print "**** Geracao Arquivos de Distancia *************"
+    print "****** Generating distance files *************"
 
-    #USAR ARQUIVO DE CONFIGURACAO PARA PEGAR OS DADOS
+    #uses a configuration file to get experiment information
     from ConfigParser import ConfigParser
     cfg = ConfigParser()
     cfg.readfp(open(path_results+"exp_cfg.ini"))
@@ -63,12 +61,12 @@ def main():
     bases = cfg.get("Experiment","bases").split(",")
     usaClasses = int(cfg.get("Experiment","classes"))
     if (usaClasses!=1):
-        print "Nao vai considerar classificacao da base. Portantao nao serao gerados os arquivos de distancia"
+        print "Databae classification will not be used, therefore, no distance files will be generated!"
         sys.exit()
 
     n_query_imgs = int(cfg.get("Experiment","consultas"))
     if (n_query_imgs==0):
-        n_query_imgs = 1000000 #caso sejam todas as imagens de consulta, usa um numero bem grande
+        n_query_imgs = 1000000 #large number when all images are queries
 
     print "pr_progress: 0.0"
 
@@ -77,130 +75,109 @@ def main():
         bases[iBases] = b.split(":")
         iBases = iBases + 1
 
-    print "descritores =", descritores
-    print "bases =", bases
+    print "descriptors =", descritores
+    print "image databases =", bases
 
-    #VERIFICA QTDE DE CONSULTAS E MONTA UMA LISTA DE CONSULTAS!!!
+    #checks number of queries and creates a list of queries
     fv1_collection = []
     sql = "SELECT DISTINCT fv1 FROM distance WHERE idexperiment="+id_exp+" AND iddescriptor='"+descritores[0]+"'"
     cur.execute(sql)
     resultados = cur.fetchall()
-    for linha in resultados:  #CRIA lista de consultas (fv1) - eh a mesma para todos os descritores do experimento
-        fv1_collection.append(linha[0]) #adiciona linha na colecao
+    for linha in resultados:  #creates query list (fv1) - the same for all descriptors in the experiment
+        fv1_collection.append(linha[0])
     query_collection_size = len(fv1_collection)
-    print "Tamanho da colecao de consulta=",str(query_collection_size)
+    print "Size of query collection=",str(query_collection_size)
     cur.close()
 
-    #Cria arquivo de consultas!
-    #Arquivo com as imagens de consulta - eh necessario para o analyze - NAO EH O MESMO ARQUIVO USADO PELO view_images_feedback.php
+    #Creates query file!
+    #this file is necessary for the script that computes evaluation measures (analyzer)
     nome_arquivo_consultas = path_results + "queryImagesClasses.txt"
     arquivo_consultas = open(nome_arquivo_consultas, "w")
 
-    #adiciona na 1a linha do arquivo de consultas a qtde de imagens de consulta
-    arquivo_consultas.write(str(query_collection_size)+"\n")
-    for fv1 in fv1_collection: #adiciona cada fv1 da colecao no arquivo de consultas
+    arquivo_consultas.write(str(query_collection_size)+"\n") #number of query images
+    for fv1 in fv1_collection: #adding each fv1 in the query file
         #print "fv1=", fv1
         #print "bases=", bases
-        #Ajusta nome de fv1
-        #Retira de fv1 o caminho da base de imagens. Sobra o caminho a partir das classes
+        #Adjusts fv1 name
+        #removes full path from fv1; class name is kept (considering that class name is the image parent directory)
         fv1_final = fv1.split(bases[0][1])[1]
-        fv1_img    = fv1_final.split("/")[-1] #Pega o nome da imagem de consulta (sem os caminhos) - quebra nas '/' e pega o ultimo elemento
-        fv1_classe = fv1_final.split("/")[0]  #Pega a classe
-        fv1_final = fv1_classe+"/"+fv1_classe+"_"+fv1_img    #Nome ajustado, conforme observacao abaixo
+        fv1_img    = fv1_final.split("/")[-1] #Gets query image name  (no path) - splits in '/' and get the last item
+        fv1_classe = fv1_final.split("/")[0]  #Gets the class
+        fv1_final = fv1_classe+"/"+fv1_classe+"_"+fv1_img  
         arquivo_consultas.write(fv1_final)
         arquivo_consultas.write("\n")
     arquivo_consultas.flush()
-    #Finaliza o arquivo de consultas
+    #closes query file
     arquivo_consultas.close()
-    print "Gerou arquivo de consultas."
+    print "Query file generated."
 
-    #CONTA QTDE DE IMGS DA BASE (COMPARADAS COM FV1)
+    #counting the number of images compared with fv1
     cur = conn.cursor()
     sql = "SELECT DISTINCT COUNT(fv2) FROM distance WHERE idexperiment="+id_exp+" AND iddescriptor='"+descritores[0]+"' AND fv1='"+fv1_collection[0]+"'"
     cur.execute(sql)
     resultados = cur.fetchall()
     collection_size = str(resultados[0][0])
     cur.close()
-    print "Tamanho da colecao=", collection_size
+    print "Collection size=", collection_size
 
     print "pr_progress: 0.05"
 
-    #Se esta usando uma lista de imagens de consulta:
-    #TALVEZ NAO PRECISE DAS LINHAS ABAIXO QUE PEGAM O ARQUIVO DE CONSULTAS
-    #ESTA PEGANDO DIRETO DO BD
-    #try:
-    #    query_list_file_path = cfg.get("Experiment","consultas_lista")
-
-    #    #Copia dados do arquivo de imgs de consulta para uma variavel
-    #    print "query_list_file_path=", query_list_file_path
-    #    query_list_file = open(query_list_file_path,"r")
-    #    query_list = query_list_file.read().split("##")  #imgs separadas por ##
-    #    print "query_list = ", query_list
-    #except:
-    #    print "Nao esta usando lista de imagens de consulta"
-    #    query_list = []  #lista eh vazia
-
-
-    #FALTA DADOS DAS MEDIDAS - por enquanto eles nao fazem diferenca
-
     desc_size = len(descritores)
 
-    #Dados do ANALYZER
+    #ANALYZER - for computing evaluation metrics
     caminho_analyzer = "codes/analyzer/./analyze.so"
-    dis_sim = 0 #indica se o arquivo de distancias esta com valores de distancia ou de similaridade entre as imagens
-                #pela padronizacao da ferramenta, o valor eh sempre de distancia, mas
-                #o programa "analyze" permite valores de similaridade tambem
+    dis_sim = 0 #indicates if the distance file has distance of similarity values; 
+                #Eva tool is standardized to use always distance values; however, the 'analyze' program also allows similarity values
 
-    #Dados do TREC_EVAL
+    #TREC_EVAL
     caminho_trec_eval = "codes/trec_eval/"
 
     ###################################
     for desc in descritores:
-        #cria cursor para o descritor
+        #creates cursor for the descriptor
         cur = conn.cursor()
 
-        #Cria arquivo e ajusta nome dele de acordo o descritor
+        #file is created for the current descriptor
         nome_arquivo = path_results + "distances_" + desc + "_comClasses.txt"
         dist_file = open(nome_arquivo, "w")
 
-        #coloca nas 2 primeiras linhas do arquivo: qtd de consultas \n qtd de imgs na base
+        #first 2 file rows have: number of queries and number of images in the database
         dist_file.write(str(query_collection_size)+"\n")
         dist_file.write(str(collection_size)+"\n")
 
-
         for fv1_item in fv1_collection:
 
-            #Ajusta nome de fv1
-            #Retira de fv1 o caminho da base de imagens. Sobra o caminho a partir das classes
+            #Adjusts fv1 name
+            #removes full path from fv1; class name is kept (considering that class name is the image parent directory)
             fv1_final = fv1_item.split(bases[0][1])[1]
-            fv1_img    = fv1_final.split("/")[-1] #Pega o nome da imagem de consulta (sem os caminhos) - quebra nas '/' e pega o ultimo elemento
-            fv1_classe = fv1_final.split("/")[0]  #Pega a classe
-            fv1_final = fv1_classe+"/"+fv1_classe+"_"+fv1_img    #Nome ajustado, conforme observacao abaixo
+            fv1_img    = fv1_final.split("/")[-1] #Gets query image name  (no path) - splits in '/' and get the last item
+            fv1_classe = fv1_final.split("/")[0]  #Gets the class
+            fv1_final = fv1_classe+"/"+fv1_classe+"_"+fv1_img 
 
-            #Selecionar da tabela distance todas as linhas com o id do experimento e o id do descritor em questao, ordenando por fv1
+            #Selects from distance table, all lines corresponding to the current experiment and descriptor, sorted by fv1
             sql = "SELECT fv1,fv2,distance FROM distance WHERE idexperiment="+id_exp+" AND iddescriptor='"+desc+"' AND fv1='"+fv1_item+"' ORDER BY fv1,fv2"
             #print "sql=",sql
             cur.execute(sql)
             resultados = cur.fetchall()
 
-            #Para cada linha retornada para aquele fv1:
+            #For each line retrieved for that fv1:
             for linha in resultados:
-                #Para fv1 e fv2, alterar os caminhos de forma a manter apenas: "classe/nome_img" (retirar raiz da base de fv1 e fv2 = path da tabela imagedatabase)
+                #Adjusts fv1 and fv2 to have only "classe/nome_img" (removes image database path)
 
-                #Ajusta nome de fv2
-                #Retira de fv2 o caminho da base de imagens. Sobra o caminho a partir das classes
+                #Adjusts fv2 name
+                #removes full path from fv1; class name is kept (considering that class name is the image parent directory)
                 fv2_final = linha[1].split(bases[0][1])[1]
-                fv2_img    = fv2_final.split("/")[-1] #Pega o nome da imagem de consulta (sem os caminhos) - quebra nas '/' e pega o ultimo elemento
-                fv2_classe = fv2_final.split("/")[0]  #Pega a classe
-                fv2_final = fv2_classe+"/"+fv2_classe+"_"+fv2_img    #Nome ajustado, conforme observacao abaixo
+                fv2_img    = fv2_final.split("/")[-1] #Gets query image name  (no path) - splits in '/' and get the last item
+                fv2_classe = fv2_final.split("/")[0]  #Gets the class
+                fv2_final = fv2_classe+"/"+fv2_classe+"_"+fv2_img 
 
                 distance = linha[2]
 
-                #- OBSERVACAO: a classe deve estar presente antes do nome da imagem no arquivo;
-                #  por exemplo: "2/2_nome_img.txt" (2=nome da classe);
-                #  ou seja, adicionar "nomeClasse_" antes do nome da imagem.
+                #REMARK: the class name must appear before the image name in the file
+                # for example: "2/2_nome_img.txt" (2=class name);
+                # that is, add "className_" before image name
 
-                #SALVA EM ARQUIVO: caminho FV1 caminho FV2 distance
+                #saves in a file: path fv1 path fv 2 distance
                 dist_file.write(fv1_final)
                 dist_file.write("\t")
                 dist_file.write(fv2_final)
@@ -210,68 +187,57 @@ def main():
                 dist_file.write("\n")
 
                 dist_file.flush()
-                #Acabou linha atual, vai para a proxima
+                ##end of current line, goes to the next
 
-        #Fim das linhas do descritor atual.
-        #Fecha arquivo do descritor atual
+        #End of lines for the current descriptor
         dist_file.close()
 
-        #Depois que terminar a geracao do arquivo de distancias txt, submete-o ao 'analyzer'
+        #after generating the distance file (txt), uses it as input to the 'analyzer'
         ctypes = __import__('ctypes')
         lib = ctypes.CDLL(caminho_analyzer)
         nome_arquivo_resultados = path_results + "precision_recall_" + desc + ".txt"
         lib.run((path_results+desc), nome_arquivo_consultas, nome_arquivo, dis_sim, nome_arquivo_resultados)
-        print "Rodando analyzer:\nnome_arquivo_consultas:",nome_arquivo_consultas,"\nnome_arquivo_distancias:",nome_arquivo,"\ndis_sim:",str(dis_sim),"\nnome_arquivo_resultados:",nome_arquivo_resultados
-        #os.system(caminho_analyzer+" "+nome_arquivo_consultas+" "+nome_arquivo+" "+str(dis_sim)+" "+nome_arquivo_resultados)
+        print "Running analyzer:\nquery_file_name:",nome_arquivo_consultas,"\ndistance_file_name:",nome_arquivo,"\ndis_sim:",str(dis_sim),"\nresults_file_name:",nome_arquivo_resultados
 
         print "pr_progress: ", ((descritores.index(desc)+1)/desc_size)
-        cur.close() #fecha cursor
+        cur.close() #closes cursor
 
-        ###TREC_EVAL!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        #se for usar o trec_eval, precisar executar varios passos:
-        #SERIA MELHOR DEIXAR ALGUMAS PARTES FORA DO LACO, POIS A GERACAO DO map E DO qrels SAO IGUAIS PARA TODOS OS DESCRITORES
-        trec_eval = 1 #apenas para testar... ver como fazer depois!!!
+        ###TREC_EVAL! (program to compute other evaluation metrics)
+        #for running trec_eval, several steps are necessary
+        #IMPROVEMENT point: some parts could be out of this loop; e.g., generation of map and qrels files are the same for all descriptors
+        trec_eval = 1 
         if (trec_eval == 1):
-            print "Gerando arquivos para o trec_eval..."
-            #Gera arquivo de mapeamento (generateMapFile.sh caminho_base formato_arquivos)
-            #pega formato de 1 das imagens, pois eh possivelmente o formato de todas as imagens da base (MAS PODE NAO SER!!!!)
+            print "Generating files for trec_eval..."
+            #Generates mapping file (generateMapFile.sh base_path file_format)
+            #gets the format of 1 image (assuming that all images in the database have the same format (RISKY!)
             formato = fv1_img.split(".")[-1]
             print "path_results="+ path_results
             print "bases[0][0]="+ bases[0][0]
             print "bases[0][1]="+ bases[0][1]
             os.system(caminho_trec_eval+"./generateMapFile.sh "+bases[0][1]+" "+formato+" "+path_results+bases[0][0])
-            print "\tgerou map file: "+path_results+str(bases[0][0])+".map"
+            print "\tmap file generated: "+path_results+str(bases[0][0])+".map"
 
-            #gera qrels - imagens relevantes para cada consulta
-            #print "java --->>>java "+caminho_trec_eval+"WasQrelsGenerator "+path_results+str(bases[0][0])+".map "+path_results+str(bases[0][0])+".qrels"
+            #Generates qrels - relevant images for each query
+            #print "java --->>>java "+trec_eval_path+"WasQrelsGenerator "+path_results+str(bases[0][0])+".map "+path_results+str(bases[0][0])+".qrels"
             os.system("java -jar "+caminho_trec_eval+"QrelsGen.jar "+path_results+str(bases[0][0])+".map "+path_results+str(bases[0][0])+".qrels "+formato)
-            print "\tgerou qrels file: "+str(bases[0][0])+".qrels"
+            print "\tqrels file generated: "+str(bases[0][0])+".qrels"
 
-            #NAO PRECISA MAIS!!!
-            #qrels eh sempre gerado com .ppm nas extensoes das imagens...
-            #portanto, precisa-se substituir os .ppm pela extensao correta das imagens
-            #if (formato != "ppm"):
-                #print "\tSubstituindo .ppm por ."+formato+"..."
-                #os.system("sed -i \"s/.ppm/."+formato+"/g\" "+path_results+str(bases[0][0])+".qrels")
-
-            #calculando medidas usando o trec
-            print "\tCalculando medidas usando o trec_eval..."
+            #running trec_eval
+            print "\tComputing evaluation metrics with trec_eval..."
             os.system(caminho_trec_eval+"./trec_eval "+path_results+str(bases[0][0])+".qrels "+path_results+desc+"_distances.trec > "+path_results+desc+"_results.trec -q")
 
-            print "Fim do trec_eval."
-        #FIM do descritor atual
+            print "End of trec_eval."
+        #END of current descriptor
 
 
-    #POSTGRESQL - fecha conexao
-    #conn.commit()  # commit das alteracoes
-    #cur.close()
+    #POSTGRESQL - closing connection
     conn.close()
 
     print "pr_progress: 1.0"
 
     fim_total = datetime.now()
-    print "[GENERATION] Inicio da geracao:", ini_total.year, "/", ini_total.month,"/",ini_total.day," - ",ini_total.hour,":",ini_total.minute,":",ini_total.second
-    print "[GENERATION] Fim da geracao:   ", fim_total.year, "/", fim_total.month,"/",fim_total.day," - ",fim_total.hour,":",fim_total.minute,":",fim_total.second
+    print "[GENERATION] Start:", ini_total.year, "/", ini_total.month,"/",ini_total.day," - ",ini_total.hour,":",ini_total.minute,":",ini_total.second
+    print "[GENERATION] End:   ", fim_total.year, "/", fim_total.month,"/",fim_total.day," - ",fim_total.hour,":",fim_total.minute,":",fim_total.second
 
 
 if __name__=="__main__":

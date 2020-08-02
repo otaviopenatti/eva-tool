@@ -14,19 +14,19 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
 
 <?php
     session_start();
-    session_unset();  //limpa valores antigos da sessao
+    session_unset();  //delete previous session values
 
     include "../util.php";
     $dbconn = connect();
 
-    $id_experiment = NN; //colocar aqui o id do experimento para o qual se deseja usar a avaliacao com usuarios
+    $id_experiment = NN; //experiment id for the user evaluation
 
 ?>
 <html>

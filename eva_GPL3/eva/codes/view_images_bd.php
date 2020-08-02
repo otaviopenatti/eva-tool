@@ -14,60 +14,27 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
 
 <?php
-/*
-//set the cache limiter to 'private'
-session_cache_limiter('private');
-$cache_limiter = session_cache_limiter();
-
-//set the cache expire to 30 minutes
-session_cache_expire(30);
-$cache_expire = session_cache_expire();
-*/
-
-
-
 session_start();
 /*
-//echo "The cache limiter is now set to $cache_limiter<br/>";
-//echo "The cached session pages expire after $cache_expire minutes";
-*/
-
-/*
 $ cat novo2_id2_distancias_teste12.txt | grep "^class2/class1_10_689_000" | sort -k 3 | head -n 80
-                                               ^nome da img de consulta                          ^qtd de resultados
+                                               ^query image name                          ^number of results
 */
 
+// Parameters: id_experimento, id_base, id_descritor, nome_base
 
-
-
-/*
-Parametros: id_experimento, id_base, id_descritor, nome_base
-*/
-    /*
-    echo "POST<pre>";
-    print_r($_POST);
-    echo "</pre>";
-
-    echo "count=".count($_POST)."<br/>";
-    echo "keys=<pre>";
-    print_r(array_keys($_POST));
-    echo "</pre>";
-    */
-
-    //se veio de uma pagina diferente desta
+    //if came from a page different than this one
     if ($_POST) {
-        //pega apenas as chaves de cada posicao do POST
-        $post_keys = array_keys($_POST);
+        $post_keys = array_keys($_POST); //get keys from POST
         $i=0;
         $desc_count=0;
         foreach ($_POST as $post) {
-            //se a chave for "desc" eh pq a posicao atual eh o id de um descritor
+            //if key is 'desc', the current position is a descriptor id
             if (preg_match("/desc/",$post_keys[$i]) > 0) {
                 $descritores[$desc_count] = $post;
                 $desc_count++;
@@ -76,28 +43,16 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
             }
             $i++;
         }
-        //registra dados na secao para evitar perda qdo muda descritor ou imagem de consulta
+        //register data in the SESSION to avoid losing information when changes descriptor or query image
         $_SESSION['id_experimento'] = $id_experimento;
         $_SESSION['descritores'] = $descritores;
     }
 
-//     echo "id_experimento = ".$id_experimento."<br/>";
-//     echo "descritores = <pre>";
-//     print_r($descritores);
-//     echo "</pre>";
-//     echo "descritores[0] = ".$descritores[0]."<br/>";
-
-    //usa variaveis locais para valores importantes
+    //local variables for important values
     $id_experimento = $_SESSION['id_experimento'];
     $descritores = $_SESSION['descritores'];
 
-//     echo "<hr/>id_experimento = ".$id_experimento."<br/>";
-//     echo "descritores = <pre>";
-//     print_r($descritores);
-//     echo "</pre>";
-//     echo "descritores[0] = ".$descritores[0]."<br/>";
-
-    //verifica qual o descritor escolhido
+    //checks which descriptor was selected 
     if ($_GET['descritor']) {
         $id_descritor = $_GET['descritor'];
     } else if ($_SESSION['id_descritor']) {
@@ -105,37 +60,25 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
     } else {
         $id_descritor = $descritores[0];
     }
-    //registra na sessao o descritor em uso
-    $_SESSION['id_descritor'] = $id_descritor;
+    $_SESSION['id_descritor'] = $id_descritor; //registers descriptor in the SESSION
 
-    //verifica se existe lista de imagens de consulta
+    //checks if there is a query image list 
     if (file_exists("../results/".$id_experimento."/query_list.txt")) {
-        //cria um combo_box com as imgs de consulta da lista
+        //creates a combo box with the images from the query list
         $arq_query_list = file("../results/".$id_experimento."/query_list.txt");
         $lista_consultas = explode("##",$arq_query_list[0]);
-        //echo "existe lista de consultas<br>";
     }
 
-    //CONEXAO COM O BD
     include "../util.php";
     $dbconn = connect();
 
-    //echo "id_experimento=".$id_experimento."<br>";
-
-    //caso GET esteja vazio, coloca imagem de consulta padrao
+    //if GET is empty, uses a default query image
     if ($_GET['query_img']) {
         $img_consulta = $_GET['query_img'];
-        //echo "img_consulta_get=".$img_consulta."<br>";
-        //echo "ja tinha uma imagem de consulta no GET<br/>";
     } else if (file_exists("../results/".$id_experimento."/query_list.txt")) {
-        //se houver arquivo de consultas pega a primeira consulta dele, pois é mais rápido do que pegar do bd
-        $img_consulta = $lista_consultas[0];
-        //echo "pegou img de consulta do arquivo query_list.txt - ".$img_consulta."<br/>";
+        $img_consulta = $lista_consultas[0]; //uses the first image from the list instead of selecting from the database (faster)
     } else {
-        //echo "pegou a primeira consulta do banco!!!<br/>";
-        //img de consulta padrao eh a primeira encontrada como fv1 na tabela de distancias
-        //!$img_consulta = "/exp/otavio/img_databases/yahoo_2000/jpg00111.jpg";
-
+        //using first query from the database
         $consulta_inicial = "SELECT fv1 FROM distance WHERE idexperiment=".$id_experimento." LIMIT 1";
         $result_inicial = pg_query($consulta_inicial) or die('Query failed: ' . pg_last_error());
         $line = pg_fetch_array($result_inicial, null, PGSQL_ASSOC);
@@ -145,30 +88,21 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
         pg_free_result($result_inicial);
     }
 
-    //arquivo da imagem de consulta - depende do valor de $img_consulta
-    //ajusta o caminho do arquivo
     $img_consulta_file = AdjustImageSource($img_consulta);
 
 
-    /*****PARAMETROS DE VISUALIZACAO*****/
-    //Quantidade de colunas na tabela de resultados
-    $qtd_colunas_resultados = 5;
+    /***** VISUALIZATION PARAMETERS *****/
+    $qtd_colunas_resultados = 5; //number of columns in the table of results
     $qtd_resultados = 70;
 
-    //echo "img_consulta=".$img_consulta."<br/>";
-
-    //Trata casos com imgs com aspas simples ou barra ao contrario no nome do arquivo
+    //dealing with simple quote of back slash in the file name
     if (preg_match("/'/",$img_consulta)) {
         $img_consulta = str_replace("'","''",$img_consulta);
         $img_consulta = str_replace("\\","",$img_consulta);
     }
-    //echo "img_consulta_ok=".$img_consulta."<br/>";
-    //$img_consulta = str_replace("\\","",$img_consulta);
 
-    //a consulta acima estava bem mais lenta
     $consulta = "SELECT * FROM (SELECT fv2, distance FROM distance WHERE idexperiment=".$id_experimento." AND iddescriptor='".$id_descritor."' ";
     $consulta.= "AND fv1='".$img_consulta."' ORDER BY distance LIMIT ".$qtd_resultados.") AS interna ORDER BY distance,fv2";
-    //echo "consulta: ".$consulta;
     $result = pg_query($consulta) or die('Query failed: ' . pg_last_error());
 
 ?>
@@ -206,7 +140,7 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
         <?$action = "view_images_bd.php"?>
         <form method="get" action="<?=$action?>">
             <select name="descritor" size="1">
-                <!-- esta lista depende do experimento - pegar descritores usados -->
+                <!-- this list depends on the experiment - get descriptors used -->
                 <option value="">--select--</option>
                 <?
                 echo "\n";
@@ -232,9 +166,9 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
            Name: <br/><?=$img_consulta?><br/>
            <!-- Classe: <?//=$_GET['class']?>-->
 
-            <!-- VERIFICACAO DA LISTA DE IMGS DE CONSULTA -->
+            <!-- VERIFICATION OF THE QUERY LIST -->
             <?
-                //se existe lista de consultas, monta combo box
+                //if there is query list, creates the combo box
                 if ($lista_consultas) {
             ?>
             <br/><br/>
@@ -246,7 +180,7 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
                     <?
                     echo "\n";
                     foreach ($lista_consultas as $lista_item) {
-                        //o nome da imagem eh apenas o nome do arquivo sem a estrutura de dir
+                        //image name should be only file name, no path included
                         $lista_item_nome = explode("/",$lista_item);
                         $lista_item_dir = $lista_item_nome[count($lista_item_nome)-2];
                         $lista_item_nome = $lista_item_nome[count($lista_item_nome)-1];
@@ -260,7 +194,7 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
             <?
                 }
             ?>
-            <!-- FIM - VERIFICACAO DA LISTA DE IMGS DE CONSULTA -->
+            <!-- END - VERIFICATION OF THE QUERY LIST -->
 
          </td></tr>
     </table>
@@ -271,31 +205,19 @@ Parametros: id_experimento, id_base, id_descritor, nome_base
     <tr>
 <?
 
-
-    /*
-    echo "<hr/>ArrayFinal<pre>";
-    print_r($array_final);
-    echo "</pre>";
-    */
-
     $cont=1;
     while ($line = pg_fetch_array($result, null, PGSQL_ASSOC)) {
-    //!foreach ($array_final as $linha) {
 
-        //nome do arquivo eh ajustado para o dir local da base de imagens
+        //file name is adjusted for the image database local directory
         $img_file = AdjustImageSource($line[fv2]);
-        //echo "img_file=".$img_file."<br>";
 
-        //o nome da imagem eh apenas o nome do arquivo sem a estrutura de dir
+        //image name should be only file name, no path included
         $img_name = explode("/",$img_file);
         $img_name = $img_name[count($img_name)-1];
 
-        //substitui espacos por %20 nos nomes de arquivos das imagens
-        //$img_file = str_replace(" ", "%20", $img_file);
-
-        //nome da imagem
+        //image name
         echo "<td>";
-        if (!$lista_consultas) { //se nao usou uma lista de consultas, todas as imgs sao links
+        if (!$lista_consultas) { //if there is not query list, all images are hyperlinks
             echo "  <a href=\"view_images_bd.php?query_img=".$line[fv2]."\">";
         }
         echo "    <img src=\"".$img_file."\" alt=\"".$img_name."\" border=\"1\" style=\"max-width:180px;\" height=130/>";

@@ -190,147 +190,117 @@ int main(int argc, char** argv)
   char *strng, buffer[MAX_BUFFER_SIZE];
   Search *searches;
   int i, j, k;
-  char distTrecName[100]; //guarda nome do arquivo de distancias do trec
-  double *max_distance; //vetor para guardar a maior distancia de cada consulta - usada para transformar distancia em similaridade pro trec_eval
+  char distTrecName[100]; //saves the file name of the distance files from trec
+  double *max_distance; //vector to store the max distance for each query - this is used to converts the distance to similarity for the trec_eval
 
   if (argc != 6) {
     fprintf(stderr,"usage: analyze <desc_name> <searches> <results> <dis|sim> <curve>\n");
     exit(-1);
   }
 
-  //leitura do arquivo de consultas
+  //reading query file
   fsearch = fopen(argv[2], "r");
   if (fsearch == NULL) {
     fprintf(stderr,"Cannot open %s.\n",argv[2]);
     exit(-1);
   }
 
-  //leitura do arquivo de distancias
+  //reading distance file
   fresult = fopen(argv[3], "r");
   if (fresult == NULL) {
     fprintf(stderr,"Cannot open %s.\n",argv[3]);
     exit(-1);
   }
 
-  //leitura da opcao de distancia=0 ou similaridade=1
+  //reading distance=0 or similarity=1 option
   int dis_sim = atoi(argv[4]);
   if (dis_sim != 0 && dis_sim != 1) {
     fprintf(stderr,"Choose 0 for distance or 1 for similarity\n");
     exit(-1);
   }
 
-  //le a qtd de consultas do arquivo de consultas
-  fscanf(fsearch,"%d\n",&num_searches);
+  fscanf(fsearch,"%d\n",&num_searches); //number of queries in the query file
 
-  //le a qtd de consultas do arquivo de distancias
-  fscanf(fresult,"%d\n",&i);
-  if (i != num_searches) {  //qtdes devem ser iguais nos 2 arquivos
-    fprintf(stderr,"Number of searches in %s and %s are differ.\n",argv[2],argv[3]);
-    exit(-1);   //se forem diferentes, sai do programa...
+  fscanf(fresult,"%d\n",&i); //number of queries in the distance file
+  if (i != num_searches) {  //they must be the same in the two files
+    fprintf(stderr,"Number of searches in %s and %s are different.\n",argv[2],argv[3]);
+    exit(-1);   //if they are different, abort execution
   }
 
-  //le a qtd de imagens da base do arquivo de distancias
-  fscanf(fresult,"%d\n",&num_results);
+  fscanf(fresult,"%d\n",&num_results); //number of database images in the distance file
 
-  //aloca o vetor de consultas com qtd_consultas posicoes
-  //searches = (Search *)MallocPool(num_searches * sizeof(Search), PERM_POOL);
-  //!printf("vai alocar\tsearches....\t...%d...\t", num_searches);
+  //creates vector of queries
   searches = (Search *) calloc(num_searches, sizeof(Search));
-  //!printf("alocou.\n\n");
 
   max_distance = (double *) calloc(num_searches, sizeof(double));
 
-  //para cada consulta...
+  //for each query
   for (i=0;i<num_searches;i++) {
   
-    max_distance[i] = -1; //inicializa vetor de maximas distancias
+    max_distance[i] = -1; //initializes the vector of max distances
   
-    fgets(buffer, MAX_BUFFER_SIZE, fsearch);  //Leitura do arquivo de consultas
+    fgets(buffer, MAX_BUFFER_SIZE, fsearch);  //reading query file
 
-    //Lendo classe da imagem de consulta...
-    strng = strtok(buffer,"/");     //quebra a primeira linha no caractere '/'
-    if (debug) printf("\nclasse da consulta %d = %s\n", i, strng);
-    //searches[i].cls_name = (char *)MallocPool(strlen(strng), PERM_POOL);  //aloca string para a classe da consulta
-    //!printf("vai alocar\tsearches[i].cls_name....\t...%d...\t", strlen(strng));
+    //reading the query image class
+    strng = strtok(buffer,"/"); //splits in the first '/' char
+    if (debug) printf("\nquery class %d = %s\n", i, strng);
     searches[i].cls_name = (char *) calloc(strlen(strng)+1, sizeof(char));
-    //!printf("alocou.\n");
-    //strcpy(searches[i].cls_name,strng);                 //copia a string tokenizada para a estrutura
     sprintf(searches[i].cls_name, "%s", strng);
-    if (debug) printf("classe da consulta SEARCHES %d = %s\n", i, searches[i].cls_name); //ateh aqui esta ok!!
+    if (debug) printf("class from query on SEARCHES %d = %s\n", i, searches[i].cls_name);
 
-    //Lendo nome da imagem de consulta...
-    strng = strtok(buffer+strlen(strng)+1,"\n");  //pega o resto da linha até o '\n' - do arquivo de consultas
-    if (debug) printf("img de consulta %d = %s\n", i, strng);
-    //searches[i].key_base = (char *)MallocPool(strlen(strng), PERM_POOL);  //aloca string para o nome da img de consulta
-    //!printf("vai alocar\tsearches[i].key_base....\t...%d...\t", strlen(strng));
+    //reading query image name
+    strng = strtok(buffer+strlen(strng)+1,"\n"); //gets the rest of the line until '\n' (from query file)
+    if (debug) printf("query img %d = %s\n", i, strng);
     searches[i].key_base = (char *) calloc(strlen(strng)+1, sizeof(char));
-    //!printf("alocou.\n");
-    //strcpy(searches[i].key_base,strng);  //copia string para a estrutura
     sprintf(searches[i].key_base, "%s", strng);
-    if (debug) printf("img de consulta %d na ESTRUTURA= %s\n", i, searches[i].key_base);
+    if (debug) printf("query image %d in the structure= %s\n", i, searches[i].key_base);
 
-    //Aloca estrutura para os resultados da consulta atual...
-    //searches[i].results = (Result *)MallocPool(num_results * sizeof(Result), PERM_POOL);  //cria um pool para os resultados da consulta atual
-    //!printf("vai alocar\tsearches[i].results....\t...%d...\t", num_results);
+    //creates structure for the results of the current query
     searches[i].results = (Result *) calloc(num_results, sizeof(Result));
-    //!printf("alocou.\n\n");
-    searches[i].num_relevants = 0;       //inicializa o contador de relevantes com zero
+    searches[i].num_relevants = 0;  //initializes the counter of relevants with zero
 
-    //Para cada img comparada com a consulta atual...
+    //for each image that was compared with the current query:
     for (j=0;j<num_results;j++) {
-        //PEGA A DISTANCIA ENTRE A CONSULTA i E A IMG j
-        fgets(buffer, MAX_BUFFER_SIZE, fresult);  //le do arquivo de resultados
-        searches[i].results[j].distance = atof(strrchr(buffer,'\t')+1);  //procura a ultima ocorrencia do caractere '\t' e coloca no vetor de resultados a distancia entre a consulta e a img atual
-        //!!printf("\n\tdistancia entre consulta %d e img %d = %f\n", i, j, searches[i].results[j].distance);
+        //gets the distance between the query i and the image j
+        fgets(buffer, MAX_BUFFER_SIZE, fresult); //reads the results file
+        searches[i].results[j].distance = atof(strrchr(buffer,'\t')+1); //finds the last '\t' occurrence and inserts the distance between query and image in the results file
 
-        //VERIFICANDO MAIOR DISTANCIA DO DESCRITOR
+        //checking max distance for the descriptor
         if (searches[i].results[j].distance > max_distance[i]) {
-            max_distance[i] = searches[i].results[j].distance; //atualiza maior distancia da consulta atual
+            max_distance[i] = searches[i].results[j].distance;
         }
 
-        //LENDO A CLASSE DA IMG ATUAL...
-        strng = strtok(strchr(buffer,'\t')+1,"/");  //busca '\t' e,  a partir dele, quebra a linha lida no '/'
-        //printf("\n\tACHOU ALGO:\tbuffer=\"%s\"\tstrchr=\"%s\"\tstrchr+1=\"%s\"\tstrtok=\"%s\"\tstr_final=\"%s\"", buffer, strchr(buffer,'\t'), (strchr(buffer,'\t')+1), strtok(strchr(buffer,'\t')+1,"/"), strng);
-        //printf("\n\tACHOU ALG2:\tbuffer=\"%s\"\tstrchr=\"%s\"\tstrchr+1=\"%s\"\tstrtok=\"%s\"\tstr_final=\"%s\"", buffer, strchr(buffer,'\t'), (strchr(buffer,'\t')+1), strtok(strchr(buffer,'\t')+1,"/"), strng);
+        //reading image class
+        strng = strtok(strchr(buffer,'\t')+1,"/");  //finds '\t' and, from this occurrence, splits the line in the '/' character
 
         if (debug) printf("\n\tclasse da img %d = %s\n", j, strng);
-        //searches[i].results[j].cls_name = (char *)MallocPool(strlen(strng), PERM_POOL);  //aloca string para a classe da img j
-        //!printf("vai alocar\tsearches[i].results[j].cls_name....\t...%d...\t", strlen(strng));
         searches[i].results[j].cls_name = (char *) calloc(strlen(strng)+1, sizeof(char));
-        //!printf("alocou.\n");
-        //strcpy(searches[i].results[j].cls_name,strng);  //copia string para a classe da img j
         sprintf(searches[i].results[j].cls_name, "%s", strng);
-        if (debug) printf("\tclasse da img %d na estrutura = %s\n", j, searches[i].results[j].cls_name);
+        if (debug) printf("\timage class %d in the structure = %s\n", j, searches[i].results[j].cls_name);
 
-        //LENDO O NOME DA IMG ATUAL...
-        strng = strtok(strchr(buffer,'\t')+1+strlen(strng)+1,"\t");  //pega o nome da img j
-        if (debug) printf("\tnome da img %d = %s\n", j, strng);
-        //searches[i].results[j].key_name = (char *)MallocPool(strlen(strng), PERM_POOL);  //aloca string para o nome da img j
-        //!printf("vai alocar\tsearches[i].results[j].key_name....\t...%d...\t", strlen(strng));
+        //reading image name
+        strng = strtok(strchr(buffer,'\t')+1+strlen(strng)+1,"\t"); 
+        if (debug) printf("\t img name %d = %s\n", j, strng);
         searches[i].results[j].key_name = (char *) calloc(strlen(strng)+1, sizeof(char));
-        //!printf("alocou.\n\n");
-        //strcpy(searches[i].results[j].key_name,strng);  //copia string para a estrutura
         sprintf(searches[i].results[j].key_name, "%s", strng);
-        if (debug) printf("\tnome da img %d na estrutura = %s\n", j, searches[i].results[j].key_name);
+        if (debug) printf("\timg name %d in the structure = %s\n", j, searches[i].results[j].key_name);
 
-        //VERIFICA SE A CLASSE DA CONSULTA EH IGUAL A CLASSE DA IMG ATUAL
-        if (debug) printf("\tclasse da img %d na estrutura (DEPOIS)= %s\n", j, searches[i].results[j].cls_name);  //AQUI, QDO O NOME DA IMG EH PEQUENO A CLASSE ESTA FICANDO SEM VALOR!!!!
-                                                                                                    //ESTRANHO, POIS NENHUM VALOR EH ATRIBUIDO A cls_name desde a linha 235.
-      if (strcmp(searches[i].cls_name,searches[i].results[j].cls_name) == 0) {
-        searches[i].results[j].relevant = 1;  //marca se a img j eh da mesma classe que a img de consulta i
-        searches[i].num_relevants++; //conta a qtd de imagens relevantes para aquela consulta
-      }
-      else
-        searches[i].results[j].relevant = 0;  //marca se a img j nao eh da mesma classe que a img de consulta i
+        //checking if query and image classes are the same
+        if (debug) printf("\timg class %d in the structure (AFTER)= %s\n", j, searches[i].results[j].cls_name); //possible BUG here: when image name is short, class is getting empty
+
+        if (strcmp(searches[i].cls_name,searches[i].results[j].cls_name) == 0) {
+            searches[i].results[j].relevant = 1; //indicates the classes are the same
+            searches[i].num_relevants++; //increments the number of relevant images for the query
+        }
+        else
+            searches[i].results[j].relevant = 0; //indicates the classes are different
     }
 
-    if (debug) printf("classe da consulta %d (DEPOIS DE LER OS RESULTADOS)= %s\n", i, searches[i].cls_name); //ateh aqui esta ok!!
+    if (debug) printf("query classe %d AFTER READING RESULTS)= %s\n", i, searches[i].cls_name);
 
   }
 
-  //printf("max_distance = %lf\n", max_distance);
-
-  //criando arquivo para guardar as distancias no formato do trec
+  //creating file to store distances in the trec_eval format
   sprintf(distTrecName, "distances_%s.trec", argv[1]);
   fdistTrec = fopen(distTrecName, "w");
   if (fdistTrec == NULL) {
@@ -338,84 +308,50 @@ int main(int argc, char** argv)
     exit(-1);
   }
 
-  //Percorre as consultas
+  //for each query
   for (i=0;i<num_searches;i++) {
-    if (dis_sim == 0) {  //se o arquivo de distancias tiver valores de distancia
-      qsort(searches[i].results,num_results,sizeof(Result),&ResultCompare); //ordena os resultados
-    } else {  //senao, os valores sao de similaridade, entao ordena de maneira inversa
-      qsort(searches[i].results,num_results,sizeof(Result),&ResultCompareSim);
+    if (dis_sim == 0) {  //if distance
+      qsort(searches[i].results,num_results,sizeof(Result),&ResultCompare); //sort results
+    } else {             //if similarity
+      qsort(searches[i].results,num_results,sizeof(Result),&ResultCompareSim); //sort results in inverse order
     }
     if (debug || treceval) {
-        //!tava no debug - printf("resultados da consulta %d ordenados pela distancia - classe consulta=%s\tqtd_relevantes=%d\n", i, searches[i].cls_name, searches[i].num_relevants);
         for (j=0;j<num_results;j++) {
-            //!tava no debug - printf("\tresult[%d]\tnome=%s\tclasse=%s\tdistance=%f\trelevante?=%d\n", j, searches[i].results[j].key_name, searches[i].results[j].cls_name, searches[i].results[j].distance, searches[i].results[j].relevant);
-            //gerando entrada para o trec_eval:
-            //nome_query x class_img/nome_img indice similaridade text
+            //creating input for trec_eval: query_name x class_img/img_name index similarity text
             fprintf(fdistTrec, "%s %d %s/%s %d %f %s\n", searches[i].key_base, 1, searches[i].results[j].cls_name, searches[i].results[j].key_name, j, ((max_distance[i]-searches[i].results[j].distance)/max_distance[i]), "trec_run");
         }
     }
 
-//     LACO ORIGINAL!!!!!!!!!!!!!!!!!!!!!
-//     num_relevants = 0; //inicializa a qtd de relevantes
-//     for (j=0,k=0;j<num_results && k<NUM_AVERAGE_POINTS;j++) { //percorre cada resultado, ateh todos os resultados ou ateh k chegar em um valor de media
-//       if (searches[i].results[j].relevant) { //se a imagem retornada eh relevante, incrementa num_relevantes
-//         num_relevants++;
-//       }
-//       printf("\tj=%d\tnum_relevants=%d\tk=%d\ttotal_relevants=%d--\tnumRel/(j+1)=%f\n", j, num_relevants, k, searches[i].num_relevants, num_relevants/(float)(j+1));
-//       if ((10 * num_relevants >= k * searches[i].num_relevants)) { //se a qtd de relevantes retornadas for maior ou igual a k*a qtd de relevantes existente, 
-//         searches[i].precision[k] = num_relevants/(float)(j+1);   //calcula precision para k: divide qtd de relevantes retornadas por qtd de imgs retornadas ateh o momento
-//         k++;
-//       }
-//     }
-
-    num_relevants = 0; //inicializa a qtd de relevantes
-    j = 0; //inicializa j - contador das imgs retornadas
+    num_relevants = 0; //initializes relevants counter
+    j = 0; //initializes j - counter of retrieved images
     float recall=0.0, precision=0.0;
-    int last_k = 0;  //guarda o ultimo recall ateh o qual ja tem precision calculado
-    while ((j<num_results) && (recall<1.0)) { //percorre cada resultado, ateh todos os resultados ou ateh k chegar em um valor de media
-      if (searches[i].results[j].relevant) { //se a imagem retornada eh relevante, incrementa num_relevantes
+    int last_k = 0; //saves the last recall which already have precision metric computed
+    while ((j<num_results) && (recall<1.0)) { //scans each result, until the end or until k achieving an average value
+      if (searches[i].results[j].relevant) { //if retrieved images is relevant, increments num_relevantes
         num_relevants++;
       }
 
-      precision = (float) num_relevants/(float)(j+1); //calcula precision atual --> qtd_relevantes_retornadas / total_retornadas
-      recall = (float) num_relevants / searches[i].num_relevants;  //calcula recall atual
-      //!!printf("img[%d]\tprecision=%f\trecall=%f\trecall/10=%d\trecall_resto_10=%d\n", j, precision, recall, ((int)(recall*100.0)/10), ((int)(recall*10.0)%10));
+      precision = (float) num_relevants/(float)(j+1); //computes current precision --> (number of relevants retrieved / total retrieved)
+      recall = (float) num_relevants / searches[i].num_relevants;  //computes current recall
+      if (debug) printf("\tinserting precision=%f of recall=%d until %d\n", precision, last_k, ((int)(recall*100.0)/10));
+      for (k=last_k; k<=((int)(recall*100.0)/10); k++) { //copies the same precision for all until the integer part of (recall/10)
+            searches[i].precision[k] = precision;
+      }
+      last_k = k; //updates the last recall with the computed precision
 
-      //if (((int)(recall*10.0)%10)) { //se recall for um valor nao exato entre 10 e 10%, precisa copiar valor para os mais proximos anteriores
-     //     printf("\t\tnao eh exato --> resto=%d\t vai copiar ateh recall<%d\n", ((int)(recall*10.0)%10), ((int)(recall*100.0)/10));
-          if (debug) printf("\tcolocando precision=%f de recall=%d ateh %d\n", precision, last_k, ((int)(recall*100.0)/10));
-          for (k=last_k; k<=((int)(recall*100.0)/10); k++) { //copia o mesmo precision para todos até a parte inteira de (recall/10)
-                searches[i].precision[k] = precision;
-          }
-          last_k = k; //atualiza ultimo recall com precision calculado
-      //} else {
-      //    printf("\t\teh exato --> %d\t vai copiar no recall=%d\n", ((int)(recall*10.0)%10), ((int)(recall*100.0)/10));
-      //    k = ((int)(recall*100.0)/10); //k recebe a parte inteira do recall/10   >> subtrai 1 para usar de indice
-      //    searches[i].precision[k] = precision;  //apenas o ponto especifico de recall recebe o precision
-      //}
-
-      j++; //vai pra proxima img retornada
+      j++; //goes to the next retrieved image
     }
-  } //fim - percorre consultas
+  } //end - scan of queries
 
-  //deve ficar claro que a qtd de imagens retornadas varia ateh se encontrar os valores de recall.
-  /*for (i=0;i<num_searches;i++) {
-    printf("\nconsulta[%d]\n", i);
-    for (j=0;j<NUM_AVERAGE_POINTS;j++) {
-      printf("\tprecision[%d]=%f\n", j, searches[i].precision[j]);
-    }
-  }*/
-
-  //Faz a media dos precision de todas as consultas
+  //computes the average of precision values for all queries
   for (j=0;j<NUM_AVERAGE_POINTS;j++) {
     precision[j] = 0.0;
     for (i=0;i<num_searches;i++)
-      precision[j] += searches[i].precision[j]; //acumula os precision de toddas as consultas
-    precision[j] /= (float)num_searches;   //e divide pela qtd de consultas
+      precision[j] += searches[i].precision[j]; //cumulates the precision values of all queries
+    precision[j] /= (float)num_searches; //and divides by the number of queries
   }
 
-  //FreeStoragePool(PERM_POOL);
-  //Liberando memoria
+  //Free memory
   for (i=0;i<num_searches;i++) {
     free(searches[i].cls_name);
     free(searches[i].key_base);

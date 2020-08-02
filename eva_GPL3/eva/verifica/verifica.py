@@ -50,7 +50,6 @@ def cleanup():
 
 atexit.register(cleanup)
 
-#fullbasepath = "/home/lis/otavio/public_html/tests/ferramenta/descriptors"
 fullbasepath = "descriptors"
 nomeArqResults = "/tmp/resultado_verifica_"+sys.argv[1]+".txt"
 
@@ -58,7 +57,7 @@ nomeArqResults = "/tmp/resultado_verifica_"+sys.argv[1]+".txt"
 try:
     lib = CDLL(join(fullbasepath,sys.argv[1]))
 except OSError, ex:
-    #print "Arquivo inválido!\n", str(ex)
+    #print "Invalid file!\n", str(ex)
     traceback.print_tb(sys.exc_info()[2])
     print ex
     if (str(ex)[-6:] == 'header'):

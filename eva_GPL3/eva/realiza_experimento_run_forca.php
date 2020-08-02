@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -37,10 +37,10 @@
         //$comando = "python codes/executa_experimento.py ".$id_exp." 2>&1 | cat > /exp/otavio/results/".$id_exp."/exp_details_".$id_exp.".log &";
         $comando = "python codes/executa_experimento.py ".$ID_EXP." 2>&1 | cat >> /exp/otavio/results/".$ID_EXP."/exp_details_".$ID_EXP.".log &";
 
-        // LEMBRE-SE DE ADICIONAR NO ARQUIVO DE LOG AO INVES DE INICIAR UM NOVO (USAR '>>' AO INVES DE '>')
+        // REMEMBER TO APPEND IN THE LOG FILE, INSTEAD OF STARTING A NEW ONE (USE '>>' INSTEAD OF '>')
         // CHANGE, IF NECESSARY, THE executa_experimento.py FILE (SELECT WHAT IS GOING TO BE EXECUTED AGAIN)
 
-        //echo "COMENTADO! PARA USAR DESCOMENTE A LINHA CORRESPONDENTE!<br/>"; //a linha abaixo
+        //echo "COMMENTED: TO EXECUTE, UNCOMMENT THE LINE BELOW!<br/>";
         exec($comando);
 
     } else {

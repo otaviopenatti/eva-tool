@@ -21,12 +21,12 @@
 
 import psycopg2
 
-#Funcao usada para conectar no banco de dados
+#Function to connect in the database
 def connect():
-    #usando postgres
+    #postgres
     conn = psycopg2.connect("dbname='eva' user='otapena' host='localhost' password='otavio'")
 
-    #altera o encoding do banco
+    #update database encoding
     cur = conn.cursor()
     cur.execute("SET CLIENT_ENCODING TO 'LATIN1';")
     conn.commit()

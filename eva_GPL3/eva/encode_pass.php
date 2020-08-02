@@ -14,14 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
 
 <?php
-  //use este arquivo para cifrar sua senha, caso vc nao queira que ela fique aberta no arquivo util.php
-  //use this file to encode your password (if you want to put the encoded password inside the util.php file)
+  //use this script to encode your password (if you want to put the encoded password inside the util.php file)
   echo base64_encode("your_password_here");
 
 ?>

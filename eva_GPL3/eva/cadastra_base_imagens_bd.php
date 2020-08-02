@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -46,8 +46,6 @@ session_start();
             $classificada="true";
         $query = "INSERT INTO imagedatabase (name, path, descr, classified) VALUES ('$_POST[nome]', '$_POST[path]', '$_POST[descr]', ".$classificada.")";
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
-
-        //print "INSERIU!!!!!!!";
 
 ?>
 <html>

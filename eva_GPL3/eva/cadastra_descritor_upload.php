@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -34,8 +34,6 @@ session_start();
 
         $nome_desc_size = strlen(substr($_FILES['plugin_file']['name'],0,strpos($_FILES['plugin_file']['name'],".")));
 
-        //echo "tamanho nome desc=".$nome_desc_size."<br/>";
-        //echo "dir=".$uploaddir.$_FILES['plugin_file']['name']."<br/>";
         if (file_exists($uploaddir.$_FILES['plugin_file']['name'])) {
             echo "Eva already has a descriptor with the same name!<br>";
             echo "<a href=\"cadastra_descritor.php\">Back</a>";
@@ -43,22 +41,16 @@ session_start();
         } else if ($nome_desc_size <= 20) {
 
             if (move_uploaded_file($_FILES['plugin_file']['tmp_name'], $uploaddir . $_FILES['plugin_file']['name'])) {
-                //print "O arquivo &eacute; valido e foi carregado com sucesso. Aqui esta alguma informacao:\n";
-                //print_r($_FILES);
 
                 $destino = "cadastra_descritor_verifica.php";
                 $_SESSION['plugin_file'] = $_FILES['plugin_file']['name'];
-
-                //print "<br/><br/><br/><br/><br/><br/><br/><hr/>";
-                //print_r($_SESSION);
-                //print "<hr/><br/><br/>session_id=".session_id()."<br/><br/><br/><br/>";
 
                 echo "<html>\n<head>\n<title>Redirecting...</title>\n";
                 echo "<META HTTP-EQUIV=\"Refresh\" CONTENT=\"0;URL=$destino\"\">\n</head>\n</html>";
 
             } else {
                 print "<pre>";
-                print "Poss&iacute;vel ataque de upload! Aqui esta alguma informa&ccedil;&atilde;o:\n";
+                print "Possible upload attack. Some information below:\n";
                 print_r($_FILES);
                 print "</pre>";
             }

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -53,13 +53,13 @@
 
 <?
        
-        // SQL para verificar se o descritor esta em uso em algum experimento
+        // SQL to check if the descriptor is in use in any experiment
         $query =  "SELECT COUNT(iddescriptor) FROM experimentdescriptor WHERE iddescriptor='$_GET[id]'";
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
         $line = pg_fetch_array($result, null, PGSQL_ASSOC);
         pg_free_result($result);
         if ($line['count'] != 0) {
-            //descritor esta em uso, portanto nao pode ser apagado do bd
+            //descriptor is in use in some experiment, therefore it cannot be deleted
 ?>
             PROBLEMS DELETING DESCRIPTOR <b><?=$_GET['id']?></b>: 
             <blockquote>
@@ -68,12 +68,12 @@
 <?
         } else {
 
-            // SQL para apagar o descritor
+            // SQL to delete the descriptor
             $query = "DELETE FROM descriptor WHERE id='$_GET[id]'";
             $result = pg_query($query) or die('Query failed: ' . pg_last_error());
             pg_free_result($result);
 
-            //apaga arquivo enviado
+            //delete descriptor file
             unlink("descriptors/$_GET[id].so");
 ?>
             Descriptor <b><?=$_GET['id']?></b> successfully deleted!<br/>

@@ -29,9 +29,9 @@ import os
 import sys
 from datetime import datetime
 import psycopg2
-import util #arquivo de funcoes uteis ao python
+import util #useful functions
 
-img_extensions = ('jpg','png','gif','tif','ppm','JPG') ##!!!CUIDADO COM EXTENSOES EM LETRAS MAIUSCULAS!
+img_extensions = ('jpg','png','gif','tif','ppm','JPG') ##ATTENTION with extensions in upper case
 collection = []
 base_id = ""
 
@@ -46,7 +46,7 @@ def process_path(limit, action, collection, root):
         raise StopIteration("Limite atingido")
     if not os.path.exists(root):
         return 
-    if not os.path.isdir(root) and (root[-3:] in img_extensions):  ##!!!!!CUIDADO COM EXTENSOES COM TAMANHO DIFERENTE DE 3 LETRAS
+    if not os.path.isdir(root) and (root[-3:] in img_extensions):  ###ATTENTION with file extensions having more than 3 characters
          action(root)
          return 
     if os.path.isdir(root):
@@ -59,7 +59,7 @@ def save_in_collection(path):
     """For each file print its path and save its path in
     the global variable collection.
     """
-    #print "adicionando: ",path
+    #print "added: ",path
     if (os.path.getsize(path) > 0):
         collection.append([base_id, path])
 
@@ -80,38 +80,34 @@ def select_n_img_paths(n, bases):
 
 
 #########################################################################
-# Parametros principais:
-# - Lista de descritores (ids dos descritores)
-# - Lista de bases de imagens (ids ou path das bases de imagens)
-# - Lista de medidas a serem extraidas no processo de extracao
+# Main parametros:
+# - List of descriptors (descriptors ids)
+# - List of image databases (ids or paths of database images)
+# - List of evaluation metrics to be computed
 #
-# SEM O if __name__ nao dah pra chamar pelo shell!!!!!!!!!!
-#if __name__=="__main__":
 def main():
 
     ini_total = datetime.now()
 
-    #PATH da Raiz do projeto
-
-    #Path descritores
+    #Path descriptors
     path_descriptors = "descriptors/"
 
-    #Path img_databases
+    #Path image databases
     path_img_databases = "img_databases/"
 
-    #Path dos resultados (fvs gerados)
+    #Path results (generated feature vectors)
     id_exp = sys.argv[1]
     path_results = "results/"+id_exp+"/"
 
     print "\n*******************************************"
     print "************** Extraction *****************"
 
-    # estes parametros serao passados pelo programa principal
+    # these parameters will be provided by the main program
     descritores = []
     bases = []
     medidas = []
 
-    #USA ARQUIVO DE CONFIGURACAO PARA PEGAR OS DADOS
+    #uses a configuration file to get experiment information
     from ConfigParser import ConfigParser
     cfg = ConfigParser()
     cfg.readfp(open(path_results+"exp_cfg.ini"))
@@ -123,104 +119,103 @@ def main():
         bases[iBases] = b.split(":")
         iBases = iBases + 1
 
-    print "descritores =", descritores
-    print "bases =", bases
+    print "descriptors =", descritores
+    print "image databases =", bases
     print "classes = ", usaClasses
-    #FALTA DADOS DAS MEDIDAS - por enquanto eles nao fazem diferenca
+    #Still missing data from evaluation metrics - no impact currently
 
     select_n_img_paths(1000000, bases)
     print "Collection: \n", collection, "\n"
     collection_size = len(collection)
     print "SIZE of collection: ", collection_size, "\n"
 
-    #Tratando colecao vazia
+    #Dealing with empty collection
     if (collection_size == 0):
-        print "Colecao Vazia!"
+        print "Empty Collection!"
         sys.exit(1)
 
-    #acumulador de tempos - inicializa com zero
+    #time accumulator - initializes with zero
     tempo = {}
-    tempos = {} #guarda todos os tempos calculados
+    tempos = {} #saves all computed times
     for desc in descritores:
         tempo[desc] = {'total':0, 'avg':0}
         tempos[desc] = {}
 
 
-    last_progress = 0 #indica o progresso do processo de extracao (muda de 10 em 10%)
+    last_progress = 0 #indicates the extraction progress (steps of 10%)
     print "ext_progress:",last_progress
 
-    ###################################
-    ### PERCORRE IMAGENS DA COLECAO ###
+    ##########################################
+    ### SCANS ALL IMAGES IN THE COLLECTION ###
     for img in collection:
 
         print "\n",img
 
-        #converte a imagem para ppm - descritores de cor exigem PPM P6
+        #converts the image to ppm - descriptors need PPM P6 input
 
-        #sempre que o processo avançar 10\%, atualiza o arquivo de progresso
-        #BUG - pode nao indicar corretamente o progresso qdo encontra uma img invalida
+        #whenever 10% of progress is achieved, updates the progress
+        #BUG - when an invalid image is found, progress counter can become incorrect
         if ( ( ( (collection.index(img)+1)/collection_size) - last_progress) >= (10/100)):
             last_progress = (collection.index(img)+1)/collection_size
             print "ext_progress:",str(last_progress)
 
         try:
 
-            #pega apenas o nome do arquivo (sem extensao, sem path)
+            #gets only file name (no extension, no path)
             nome_img = img[1].split("/")[-1:][0].split(".")[0]
 
-            #por padrao, toda imagem eh considerada PPM
-            isPPM = 1 # flag que indica se a imagem é originalmente PPM ou nao
+            #by default, every image is considered as PPM
+            isPPM = 1 # flag to indicate if the image is PPM or not
 
-            # Se a extensao da imagem for diferente de PPM, deve converte-la para PPM  // alterei de [1].upper() para [-1].upper()
+            #if image is not PPM (from file name extension), converts to PPM
             if (img[1].split("/")[-1:][0].split(".")[-1].upper() != "PPM"):
 
-                isPPM = 0 #nao eh originalmente PPM
+                isPPM = 0 #flag now indicating that image was not PPM
 
-                #converte pra PPM
+                #converts to PPM
                 im = Image.open(img[1])
                 im = im.convert("RGB")
-                #salva no diretorio /tmp/ - 
+                #save on temp directory /tmp/ - 
                 im.save("/tmp/" + nome_img + ".ppm") 
-                print "vai salvar img: ",nome_img
+                print "saving img: ",nome_img
 
             if (isPPM == 1):
                 img_path = img[1]
             else:
                 img_path = "/tmp/" + nome_img + ".ppm"
 
-            #corrige nomes de imagens com \\
+            #correcting names with \\
             img_path = img_path.replace("\\","\\\\")
-
-            #talvez tenha problemas com aspas no nome do arquivo
+            #problems may happen when there are single quotes in file name
 
             ################################
-            #### APLICANDO DESCRITORES #####
+            #### APPLYING DESCRIPTORS ######
             ################################
-            # Colocar abaixo as chamadas para a extracao de cada descritor assim se aproveita a imagem PPM criada
+            # All descriptors are applied below, in order to use the same PPM image just created (if it was not originally PPM)
             ################################
 
             for desc in descritores:
-                print "Descritor:",desc,"..."
+                print "Descriptor:",desc,"..."
 
                 nome_desc = desc
 
-                #ajusta path do fv de acordo com o experimento, a base de imagens e o descritor
+                #adjusts the fv path to have information about the experiments, image database and descriptor
                 dir_path = path_results + "fv_" + id_exp + "_" + img[0] + "_" + nome_desc
 
-                #alterando o nome do arquivo de fv para guardar todo o caminho da imagem
+                #adjusts the file name to have all image path
                 fv_path  = dir_path +"/" + img[1].replace('/','::') + ".txt"
 
-                #verifica se o diretorio de FV já existe.
+                #checks if the fv directory already exists
                 if (os.path.isdir(dir_path) == False):
-                    os.mkdir(dir_path)   #se nao existe, cria-o
+                    os.mkdir(dir_path)   #if not, creates it
 
-                #corrige nomes de imagens com \\
+                #correcting names with \\
                 fv_path = fv_path.replace("\\","\\\\")
 
                 print "fv_path=", fv_path
                 print "fv_path_size=",len(fv_path)
 
-                #se o fv ja foi extraido, nao extrai novamente... isso permite continuar a extracao de onde ela parou
+                #if the feature vector (fv) was already extracted, does not extract again; this allows restarting the extraction process from where it stopped
                 if not (os.path.exists(fv_path)):
 
                     setup = """
@@ -235,106 +230,99 @@ fv_path = "%s"
 lib.Extraction(img_path, fv_path)
                     '''
 
-                    #Constante: qtde de execucoes medidas
+                    #Constant: number of times the time measurement will be used
                     num_exec = 3
 
-                    #tempo das 3 execucoes
                     t = timeit.Timer(stmt=cmd, setup=setup)
                     avg_time = t.timeit(number=num_exec)
 
-                    #GARBAGE COLLECTOR - PODE SER NECESSARIO EM ALGUNS CASOS
-                    #import gc
-                    #gc.collect()
-
-                    #acumula medias das 3 execucoes em 'total'
+                    #averages of 3 executions are accumulated in 'total' 
                     tempo[desc]['total'] += avg_time/num_exec
 
-                    #guarda todos os tempos calculados (no caso, apenas a medias das 3 execucoes)
-                    print "(indice) imagem atual=",collection.index(img)
+                    #saves all computed times (only the averages of the 3 executions)
+                    print "(index) current image =",collection.index(img)
                     tempos[desc][collection.index(img)] = avg_time/num_exec
-                    print "calculado -> tempos[",desc,"][",collection.index(img),"] = ",avg_time/num_exec
+                    print "computed -> tempos[",desc,"][",collection.index(img),"] = ",avg_time/num_exec
 
                 else:
-                    print "fv ja foi extraido... nao extrai novamente."
+                    print "fv was already extracted; does not extract again."
 
             ################################
-            #FIM- APLICANDO DESCRITORES -FIM
+            ## END - APPLYING DESCRIPTORS ##
             ################################
 
             if (isPPM == 0):
-                #remove o arquivo PPM criado
+                #removes the PPM file created
                 os.remove("/tmp/" + nome_img + ".ppm")
-            #imagens que já eram PPM nao podem ser removidas!
+            #images that were originally PPM cannot be removed!
 
-            print "quantidade de imagens no vetor tempos do descritor", desc, "=", len(tempos[desc])
+            print "number of images in the vectors of time for the descriptor", desc, "=", len(tempos[desc])
 
         except IOError:
-            #print "Está truncada. Ignorando ela e continuando com a proxima imagem..."
-            print "Problemas com o arquivo da imagem. Ignorando e continuando com a proxima imagem..."
+            print "Problems with image file. Skipping to the next image..."
             collection_size -= 1
             #raise
             #pass
 
         except:
-            print "Erro ao processar a imagem..."
+            print "Error processing image..."
             collection_size -= 1
             #raise
             #pass
 
     print "ext_progress: 1"
 
-    #CONEXAO COM O POSTGRESQL
+    #POSTGRESQL CONNECTION
     try:
         conn=util.connect()
     except:
-        print "Erro na conexao com o banco de dados"
+        print "Error connecting to the database"
         raise
         sys.exit()
     cur = conn.cursor()
 
 
-    print "TAMANHO DA COLECAO (collection_size):",collection_size
-    print "TAMANHO REAL DA COLECAO FINAL (len(collection)):",len(collection)
+    print "COLLECTION SIZE (collection_size):",collection_size
+    print "FINAL COLLECTION SIZE (len(collection)):",len(collection) #there may be difference if some images could not be processed
 
     print "\n================="
     print "Extraction times:"
     for desc in descritores:
         try:
             #tempo[desc]['avg'] = (tempo[desc]['total']/collection_size)
-            tempo[desc]['avg'] = (tempo[desc]['total']/len(tempos[desc])) #divide pela qtde de tempos no vetor, pois, se o experimento foi reiniciado,
-                                                                          #a qtde sera diferente do tamanho da colecao
+            tempo[desc]['avg'] = (tempo[desc]['total']/len(tempos[desc])) #divides by the number of times in the vector, because if the experiment was restarted, 
+                                                                          #the quantity will be different than the collection size
             print "\n",desc, ":\ntotal time = ", tempo[desc]['total']
             print "total avg time = ", tempo[desc]['avg']
             print "collection size = ", collection_size
-            print "qtd_tempos = ",len(tempos[desc])
+            print "number of times = ",len(tempos[desc])
 
-            #calcula desvio padrao
+            #computes the standard deviation
             soma = 0
             for i, t in tempos[desc].iteritems():
-                #print "media imagem ",i,":", t
                 soma += pow((t-tempo[desc]['avg']), 2)
 
             desvio_padrao = pow(soma/len(tempos[desc]), 0.5)
-            print desc, "desvio = ", desvio_padrao
+            print desc, "standard deviation = ", desvio_padrao
 
-            #POSTGRESQL - cadastra tempo medio de 1 extracao e desvio padrao
+            #POSTGRESQL - registers the average time for 1 feature extraction and the standard deviation
             query = "INSERT INTO experimenttime (idexperiment, iddescriptor, idevaluationmeasure, value, stddev) VALUES ("+str(id_exp)+",'"+desc+"',1,"+str(tempo[desc]['avg'])+","+str(desvio_padrao)+")"
             cur.execute(query)
 
         except:
-            print "Vetor de tempos vazio! Motivos possiveis: (1)nao precisou extrair pois ja havia extraido anteriormente ou (2)a extracao do descritor esta com algum bug."
+            print "Empty vector of times! Possible reasons: (1)extraction was not necessary because it was already done before or (2)there is a bug in the descriptor extraction function."
 
 
-    print "EXTRACAO - SUCESSO!!!"
+    print "EXTRACTION - SUCESS!!!"
 
-    #POSTGRESQL - fecha conexao
-    conn.commit()  # commit das alteracoes
+    #POSTGRESQL - closing connection
+    conn.commit()
     cur.close()
     conn.close()
 
     fim_total = datetime.now()
-    print "[EXTRACTION] Inicio do experimento:", ini_total.year, "/", ini_total.month,"/",ini_total.day," - ",ini_total.hour,":",ini_total.minute,":",ini_total.second
-    print "[EXTRACTION] Fim do experimento:   ", fim_total.year, "/", fim_total.month,"/",fim_total.day," - ",fim_total.hour,":",fim_total.minute,":",fim_total.second
+    print "[EXTRACTION] Experiment started:", ini_total.year, "/", ini_total.month,"/",ini_total.day," - ",ini_total.hour,":",ini_total.minute,":",ini_total.second
+    print "[EXTRACTION] Experiment concluded: ", fim_total.year, "/", fim_total.month,"/",fim_total.day," - ",fim_total.hour,":",fim_total.minute,":",fim_total.second
 
     
 

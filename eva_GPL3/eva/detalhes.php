@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with Eva. If not, see <http://www.gnu.org/licenses/>.
 
-    For commencial use of Eva, please contact me.
+    For commercial use of Eva, please contact me.
 
     COPYRIGHT 2010-2013 - Otavio A. B. Penatti - otavio_at_penatti_dot_com
 -->
@@ -23,7 +23,7 @@
 session_start();
 
 if ($_SESSION['id_experimento']) {
-    //limpa a sessao para evitar erros
+    //destroy session to avoid errors
     session_destroy();
 }
 
@@ -56,11 +56,11 @@ if ($_SESSION['id_experimento']) {
 
     $arq_details = "results/".$_GET['id_exp']."/exp_details_".$_GET['id_exp'].".log";
     if (file_exists($arq_details)) {
-        //verifica progresso extracao
+        //check 'extraction' progress
         exec("cat ".$arq_details." | grep \"ext_progress\" | tail -n 1", $ext_prog);
         $ext_prog = split(":", $ext_prog[0]);
 
-        //verifica progresso distancia
+        //check 'distance' progress
         exec("cat ".$arq_details." | grep \"dist_progress\" | tail -n 1", $dist_prog);
         $dist_prog = split(":", $dist_prog[0]);
         if ((round(($dist_prog[1]*100),2)) == 100) {
@@ -73,7 +73,7 @@ if ($_SESSION['id_experimento']) {
     // Connecting, selecting database
     $dbconn = connect();
 
-    // Seleciona os dados do experimento
+    // Select experiment data
     $query = 'SELECT id, descr, email FROM experiment WHERE id='.$_GET['id_exp'];
     $result_exp = pg_query($query) or die('Query failed: ' . pg_last_error());
 
@@ -96,7 +96,7 @@ if ($_SESSION['id_experimento']) {
     <td>
 <?
 
-        // Seleciona todos os descritores utilizados
+        // Select all descriptors used
         $query = 'SELECT iddescriptor FROM experimentdescriptor WHERE idexperiment='.$line_exp['id']." ORDER BY iddescriptor";
         $result_desc = pg_query($query) or die('Query failed: ' . pg_last_error());
         $i=0;
@@ -109,7 +109,7 @@ if ($_SESSION['id_experimento']) {
     </td>
     <td>
 <?
-        // Seleciona todas as bases utilizadas
+        // Select all image databases used
         $query = 'SELECT img.name FROM experimentimagedatabase ei, imagedatabase img WHERE idexperiment='.$line_exp['id'];
         $query.= ' AND ei.idimagedatabase=img.id';
         $result_img = pg_query($query) or die('Query failed: ' . pg_last_error());
@@ -122,7 +122,7 @@ if ($_SESSION['id_experimento']) {
     </td>
     <td>
 <?
-        // Seleciona todas as medidas utilizadas
+        // Select all evaluation measures used
         $query = 'SELECT ev.name FROM experimentevaluationmeasure em, evaluationmeasure ev WHERE idexperiment='.$line_exp['id'];
         $query.= ' AND em.idevaluationmeasure=ev.id';
         $result_m = pg_query($query) or die('Query failed: ' . pg_last_error());
@@ -150,7 +150,7 @@ if ($_SESSION['id_experimento']) {
         pg_free_result($result_img);
         pg_free_result($result_m);
 
-        // Seleciona tempos de extracao dos experimentos
+        // Select extraction times from the experiments
         $query = 'SELECT * FROM experimenttime WHERE idexperiment='.$_GET['id_exp'].' AND idevaluationmeasure=1 ORDER BY iddescriptor';
         $result_extraction = pg_query($query) or die('Query failed: ' . pg_last_error());
 
@@ -178,7 +178,7 @@ if ($_SESSION['id_experimento']) {
             <hr size="1"/>
 
 <?
-    // Seleciona tempos de distancia dos experimentos
+    // Select distance times from the experiments
     $query = 'SELECT * FROM experimenttime WHERE idexperiment='.$_GET['id_exp'].' AND idevaluationmeasure=2 ORDER BY iddescriptor';
     $result_distance = pg_query($query) or die('Query failed: ' . pg_last_error());
 ?>
@@ -205,12 +205,11 @@ if ($_SESSION['id_experimento']) {
             <hr size="1"/>
             <h4>Other results</h4>
 <?
-        /////////////////////////////////////////////////////////////////////////////
-                        //VERIFICANDO SE A TABELA DE distancias JA EXISTIA QDO O EXPERIMENTO FOI REALIZADO
-                        //O IDEAL EH RODAR NOVAMENTE TODOS OS EXPERIMENTOS PRA NAO PRECISAR DESTA CHECAGEM!!
-                        //ASSIM, ELIMINA-SE O USO DE ARQUIVOS
+                        /////////////////////////////////////////////////////////////////////////////
+                        //Checking if the distance table already existed when the experiment was executed
+                        //(this checking was probably necessary when the tool was using distance files instead of a database)
                         echo "\t<ul>\n";
-                        $query = 'SELECT idexperiment FROM distance WHERE idexperiment='.$line_exp['id'].' LIMIT 1'; //apaguei o group by
+                        $query = 'SELECT idexperiment FROM distance WHERE idexperiment='.$line_exp['id'].' LIMIT 1';
                         $result_distance = pg_query($query) or die('Query failed: ' . pg_last_error());
                         $i=0;
                         if (pg_fetch_array($result_distance, null, PGSQL_ASSOC)) {
@@ -222,10 +221,10 @@ if ($_SESSION['id_experimento']) {
 
                         echo "    <form method=\"post\" name=\"".$line_exp['id']."\" action=\"$action\">\n";
 
-                        //coloca o id do experimento num form hidden
+                        //put experiment id in a hidden form
                         echo "\t\t\t  <input type=\"hidden\" name=\"exp\" value=\"".$line_exp['id']."\"/>\n";
 
-                        //coloca o id de cada descritor usado no experimento num form hidden
+                        //put each descriptor id used in the experiment in a hidden form
                         $i=0;
                         foreach ($descritores as $desc_id) {
                             echo "\t\t\t  <input type=\"hidden\" name=\"desc".$i."\" value=\"".$desc_id."\"/>\n";
@@ -238,11 +237,11 @@ if ($_SESSION['id_experimento']) {
                         echo "</form>\n";
 
                         ////////////////////////////////
-                        //LINK PARA AVALIACAO COM USUARIOS
-                        echo "    <form method=\"post\" name=\"seila\" action=\"codes/view_images_feedback.php\">\n";
-                        //coloca o id do experimento num form hidden
+                        //Link for user evaluation
+                        echo "    <form method=\"post\" name=\"form_name\" action=\"codes/view_images_feedback.php\">\n";
+                        //put experiment id in a hidden form
                         echo "\t\t\t  <input type=\"hidden\" name=\"exp\" value=\"".$line_exp['id']."\"/>\n";
-                        //coloca o id de cada descritor usado no experimento num form hidden
+                        //put each descriptor id used in the experiment in a hidden form
                         $i=0;
                         foreach ($descritores as $desc_id) {
                             echo "\t\t\t  <input type=\"hidden\" name=\"desc".$i."\" value=\"".$desc_id."\"/>\n";
@@ -254,8 +253,8 @@ if ($_SESSION['id_experimento']) {
                         }
                         $arq_queryImagesClasses = "results/".$line_exp['id']."/queryImagesClasses.txt";
                         if ($fim_dist==1 && file_exists($arq_queryImagesClasses)) {
-                            //distancia acabou. mas geracao do arquivo de distancias pode estar em execucao ainda
-                            //verifica progresso para saber se calculo do precision x recall ja foi calculado
+                            //distance computation finished, but distance file generation may be in execution yet
+                            //check progress in order to know it the precision x recall measure was already computed
                             exec("cat ".$arq_details." | grep \"pr_progress\" | tail -n 1", $pr_prog);
                             $pr_prog = split(":", $pr_prog[0]);
                             echo "<br/><li>Precision x Recall progress = <font color=#cc0000>".round(($pr_prog[1]*100),2)."%</font> (click in LOG to view the generated files; trec_eval results have the suffix \"'descName'_results.trec\")</li>";
