@@ -5,7 +5,7 @@
 
 Eva is a tool for evaluating image descriptors for content-based image retrieval. Eva integrates the most common stages of an image retrieval process and provides functionalities to facilitate the comparison of image descriptors in the context of content-based image retrieval. Eva supports the management of image descriptors and image collections and creates a standardized environment to run comparative experiments using them.
 
-The details about Eva are given in the paper published in the ACM International Conference on Multimedia Information Retrieval (MIR), 2010.
+The details about Eva are given in the [paper published](https://scholar.google.com.br/scholar?cluster=2106492816711591106&hl=en&as_sdt=0,5) in the ACM International Conference on Multimedia Information Retrieval (MIR), 2010.
 
 ### Examples of experiments:
 (visualization interface)
